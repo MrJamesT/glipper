@@ -4,16 +4,18 @@
 			v-for="game in games"
 			:key="game.id"
 			class="game-card bg-gray-800 p-3 m-3 rounded flex flex-col justify-between cursor-pointer"
+			@click="mainStore.selectedGameId = game.id"
 		>
 			<div class="flex flex-col justify-end items-end">
-				<div class="bg-gray-700 text-white text-xs px-2 py-1 rounded">
-					{{ formatDistanceToNowStrict(new Date(game.lastClipDate || ''), { addSuffix: true }) }}
-				</div>
-				<div class="bg-gray-700 text-white text-xs px-2 py-1 rounded mt-2">{{ game.size }}</div>
+				<Badge
+					:value="formatDistanceToNowStrict(new Date(game.lastClipDate || ''), { addSuffix: true })"
+					severity="contrast"
+				></Badge>
+				<Badge :value="game.size + ' MB'" class="mt-2" severity="info"></Badge>
 			</div>
 
 			<div>
-				<div class="bg-purple-500 text-white text-xs px-2 py-1 rounded">{{ game.nOfClips }}</div>
+				<Badge :value="game.nOfClips" class="mb-2" severity="primary"></Badge>
 				<div class="font-bold game-title">
 					{{ game.name }}
 				</div>
@@ -27,7 +29,11 @@ import { onMounted, ref } from 'vue'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { Game } from '@prisma/client'
 
+import Badge from 'primevue/badge'
+import { useMainStore } from '@renderer/stores/mainStore'
+
 const games = ref<Game[]>([])
+const mainStore = useMainStore()
 
 onMounted(() => {
 	window.electron.ipcRenderer.invoke('gamesList').then((res: Game[]) => {

@@ -1,5 +1,5 @@
 <template>
-	<div class="card">
+	<div class="card fixed w-full">
 		<Menubar :model="items">
 			<template #start>
 				<svg

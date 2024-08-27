@@ -2,7 +2,7 @@ import { readClipsFolderAndSave, readGamesFolderAndSave } from './fsOperations'
 import { prisma } from './prisma'
 
 export async function gamesList() {
-	const games = await prisma.game.findMany()
+	const games = await prisma.game.findMany({ where: { nOfClips: { gt: 0 } } })
 	return games
 }
 
@@ -13,8 +13,8 @@ export async function clipsList(gameId: string) {
 
 export async function buildGameDB(fromScratch = false) {
 	if (fromScratch) {
-		await prisma.game.deleteMany()
-		await prisma.clip.deleteMany()
+		await prisma.clip.deleteMany({})
+		await prisma.game.deleteMany({})
 	}
 
 	await readGamesFolderAndSave()

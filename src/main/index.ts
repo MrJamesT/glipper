@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
 import { prisma } from './prisma'
-import { buildGameDB, gamesList } from './gamesList'
+import { buildGameDB, gamesList, clipsList } from './gamesList'
 
 function createWindow(): void {
 	// Create the browser window.
@@ -55,7 +55,7 @@ app.whenReady().then(() => {
 
 	// IPC Endpoints
 	ipcMain.handle('gamesList', gamesList)
-	// ipcMain.handle('clipsList', clipsList)
+	ipcMain.handle('clipsList', async (_, gameId) => await clipsList(gameId))
 	ipcMain.handle('buildGameDB', async () => await buildGameDB(false))
 	ipcMain.handle('rebuildGameDB', async () => await buildGameDB(true))
 

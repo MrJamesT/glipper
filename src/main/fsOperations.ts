@@ -49,6 +49,7 @@ export async function readClipsFolderAndSave(gameId: string) {
 		await prisma.clip.deleteMany({ where: { filename: { in: clipsToDelete } } })
 
 		let dirSize = 0
+		let nOfClips = 0
 		let lastClipDate = new Date('1970-01-01T00:00:00')
 		const clipsParsedWithId = clips
 			.filter((clip) => clip.endsWith('.mp4'))
@@ -59,6 +60,7 @@ export async function readClipsFolderAndSave(gameId: string) {
 				const sizeMB = +(size / (1024 * 1024)).toFixed(2)
 				dirSize += +sizeMB
 				lastClipDate = birthtime > lastClipDate ? birthtime : lastClipDate
+				nOfClips++
 
 				return { filename: clip, gameId, size: +sizeMB, timestamp: birthtime, cut }
 			})
@@ -69,7 +71,7 @@ export async function readClipsFolderAndSave(gameId: string) {
 
 		await prisma.game.update({
 			where: { id: gameId },
-			data: { lastClipDate, size: dirSize }
+			data: { lastClipDate, size: dirSize, nOfClips }
 		})
 
 		return true
