@@ -11,6 +11,7 @@ function createWindow(): void {
 	const mainWindow = new BrowserWindow({
 		width: 1200,
 		height: 800,
+		title: 'Glipper',
 		resizable: true,
 		show: false,
 		autoHideMenuBar: true,
@@ -23,6 +24,8 @@ function createWindow(): void {
 
 	mainWindow.on('ready-to-show', () => {
 		mainWindow.show()
+		mainWindow.focus()
+		mainWindow.maximize()
 	})
 
 	mainWindow.webContents.setWindowOpenHandler((details) => {

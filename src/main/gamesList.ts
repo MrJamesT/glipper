@@ -1,4 +1,5 @@
 import { readClipsFolderAndSave, readGamesFolderAndSave } from './fsOperations'
+import { getAndSaveGamePosters } from './gamePosters'
 import { prisma } from './prisma'
 
 export async function gamesList() {
@@ -6,8 +7,8 @@ export async function gamesList() {
 	return games
 }
 
-export async function clipsList(gameId: string) {
-	const clips = await prisma.clip.findMany({ where: { gameId } })
+export async function clipsList(gameName: string) {
+	const clips = await prisma.clip.findMany({ where: { gameName } })
 	return clips
 }
 
@@ -22,8 +23,10 @@ export async function buildGameDB(fromScratch = false) {
 	const games = await prisma.game.findMany()
 	for (const game of games) {
 		console.log(`Reading clips for ${game.name}`)
-		await readClipsFolderAndSave(game.id)
+		await readClipsFolderAndSave(game.name)
 	}
+
+	await getAndSaveGamePosters()
 
 	return true
 }

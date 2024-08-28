@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useMainStore = defineStore('main', () => {
-	const selectedGameId = ref('')
+	const selectedGameName = ref('')
 	const selectedClipId = ref('')
 
-	return { selectedGameId, selectedClipId }
+	return { selectedGameName, selectedClipId }
 })

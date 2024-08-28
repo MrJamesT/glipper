@@ -31,7 +31,7 @@ const mainStore = useMainStore()
 const clips = ref<Clip[]>([])
 
 onMounted(() => {
-	window.electron.ipcRenderer.invoke('clipsList', mainStore.selectedGameId).then((res: Clip[]) => {
+	window.electron.ipcRenderer.invoke('clipsList', mainStore.selectedGameName).then((res: Clip[]) => {
 		clips.value = res
 	})
 })

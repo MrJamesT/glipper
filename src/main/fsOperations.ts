@@ -30,15 +30,15 @@ export async function readGamesFolderAndSave() {
 	}
 }
 
-export async function readClipsFolderAndSave(gameId: string) {
+export async function readClipsFolderAndSave(gameName: string) {
 	try {
 		const settings = await prisma.appSettings.findFirst()
 		if (!settings) return
 
-		const game = await prisma.game.findUnique({ where: { id: gameId } })
+		const game = await prisma.game.findUnique({ where: { name: gameName } })
 		if (!game) return
 
-		const clipsInDb = await prisma.clip.findMany({ where: { gameId } })
+		const clipsInDb = await prisma.clip.findMany({ where: { gameName } })
 		const clipsInDbNames = clipsInDb.map((clip) => clip.filename)
 
 		const clips = fs
@@ -62,7 +62,7 @@ export async function readClipsFolderAndSave(gameId: string) {
 				lastClipDate = birthtime > lastClipDate ? birthtime : lastClipDate
 				nOfClips++
 
-				return { filename: clip, gameId, size: +sizeMB, timestamp: birthtime, cut }
+				return { filename: clip, gameName, size: +sizeMB, timestamp: birthtime, cut }
 			})
 
 		await prisma.clip.createMany({
@@ -70,7 +70,7 @@ export async function readClipsFolderAndSave(gameId: string) {
 		})
 
 		await prisma.game.update({
-			where: { id: gameId },
+			where: { name: gameName },
 			data: { lastClipDate, size: dirSize, nOfClips }
 		})
 
