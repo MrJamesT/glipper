@@ -4,7 +4,9 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
 import { prisma } from './prisma'
-import { buildGameDB, gamesList, clipsList } from './gamesList'
+import { buildGameDB, gamesList, clipsList, getCountOfClipsSinceLastUpdate } from './gamesList'
+import { getClipDetails } from './fsOperations'
+import { cutClip, deleteClip } from './clipOperations'
 
 function createWindow(): void {
 	// Create the browser window.
@@ -18,7 +20,8 @@ function createWindow(): void {
 		...(process.platform === 'linux' ? { icon } : {}),
 		webPreferences: {
 			preload: join(__dirname, '../preload/index.js'),
-			sandbox: false
+			sandbox: false,
+			webSecurity: false
 		}
 	})
 
@@ -57,10 +60,15 @@ app.whenReady().then(() => {
 	})
 
 	// IPC Endpoints
-	ipcMain.handle('gamesList', gamesList)
+	ipcMain.handle('gamesList', async () => await gamesList())
 	ipcMain.handle('clipsList', async (_, gameId) => await clipsList(gameId))
+	ipcMain.handle('getSettings', async () => await prisma.appSettings.findFirst())
 	ipcMain.handle('buildGameDB', async () => await buildGameDB(false))
 	ipcMain.handle('rebuildGameDB', async () => await buildGameDB(true))
+	ipcMain.handle('getClipDetails', async (_, clipId) => await getClipDetails(clipId))
+	ipcMain.handle('cutClip', async (_, clipId, reqData) => await cutClip(clipId, reqData))
+	ipcMain.handle('deleteClip', async (_, clipId) => await deleteClip(clipId))
+	ipcMain.handle('clipsSinceLastUpdate', async () => await getCountOfClipsSinceLastUpdate())
 
 	createWindow()
 

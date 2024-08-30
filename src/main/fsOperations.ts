@@ -1,6 +1,13 @@
 import path from 'path'
 import { prisma } from './prisma'
 import fs from 'fs'
+import ffmpeg from 'fluent-ffmpeg'
+
+import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg'
+ffmpeg.setFfmpegPath(ffmpegPath)
+
+import ffprobe from 'ffprobe'
+import ffprobeStatic from 'ffprobe-static'
 
 export async function readGamesFolderAndSave() {
 	try {
@@ -75,6 +82,29 @@ export async function readClipsFolderAndSave(gameName: string) {
 		})
 
 		return true
+	} catch (error) {
+		console.error(error)
+		return false
+	}
+}
+
+export async function getClipDetails(clipId: string) {
+	try {
+		const settings = await prisma.appSettings.findFirst()
+		if (!settings) return
+
+		const clip = await prisma.clip.findUnique({ where: { id: clipId } })
+		if (!clip) return
+
+		const meta = await ffprobe(path.join(settings.gameFolder, clip.gameName, clip.filename), {
+			path: ffprobeStatic.path
+		})
+		const duration = meta.streams[0].duration
+		const fpsDiv = meta.streams[0].avg_frame_rate.split('/')
+		const fps = fpsDiv[0] && fpsDiv[1] ? Math.round(+fpsDiv[0] / +fpsDiv[1]) : 0
+		const resolution = meta.streams[0].width + 'x' + meta.streams[0].height
+
+		return { name: clip.filename, duration, fps, resolution, size: clip.size }
 	} catch (error) {
 		console.error(error)
 		return false

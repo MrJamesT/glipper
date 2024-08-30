@@ -64,6 +64,12 @@ devDependencies:
   '@rushstack/eslint-patch':
     specifier: ^1.10.3
     version: 1.10.4
+  '@types/ffprobe':
+    specifier: ^1.1.8
+    version: 1.1.8
+  '@types/ffprobe-static':
+    specifier: ^2.0.3
+    version: 2.0.3
   '@types/fluent-ffmpeg':
     specifier: ^2.1.25
     version: 2.1.25
@@ -1111,6 +1117,14 @@ packages:
 
   /@types/estree@1.0.5:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
+    dev: true
+
+  /@types/ffprobe-static@2.0.3:
+    resolution: {integrity: sha512-86Q8dIzhjknxA6935ZcVLkVU3t6bP+F08mdriWZk2+3UqjxIbT3QEADjbO5Yq8826cVs/aZBREVZ7jUoSTgHiw==}
+    dev: true
+
+  /@types/ffprobe@1.1.8:
+    resolution: {integrity: sha512-qPxx8Dy0HyH12hQCESN39NQOmU2Yl2b7tCyUhWy0l11HQv/8Yv7U+vcaveFXmXK8hcAP0oj29DPFuSM7vcC3Tg==}
     dev: true
 
   /@types/fluent-ffmpeg@2.1.25:

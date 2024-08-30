@@ -1,7 +1,7 @@
 <template>
-	<div class="h-full w-full">
+	<div class="h-dvh w-full">
 		<Header />
-		<div class="h-full pt-14">
+		<div class="h-dvh">
 			<GameTiles v-if="mainStore.selectedGameName === ''" />
 			<GamePage v-else />
 		</div>
@@ -10,6 +10,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { differenceInHours } from 'date-fns'
 
 import GameTiles from './components/GameTiles.vue'
 import Header from './components/Header.vue'
@@ -19,9 +20,15 @@ import GamePage from './components/GamePage.vue'
 
 const mainStore = useMainStore()
 
-onMounted(() => {
-	//window.electron.ipcRenderer.invoke('buildGameDB').then((res) => {
-	//	console.log(res)
-	//})
+onMounted(async () => {
+	await mainStore.getSettings()
+	if (
+		!mainStore.settings?.lastGameDBUpdate ||
+		differenceInHours(new Date(), new Date(mainStore.settings.lastGameDBUpdate)) > 4
+	) {
+		if (!mainStore.settings?.gameFolder) return
+		console.log('Game DB is older than 4 hours, rebuilding...')
+		window.electron.ipcRenderer.invoke('buildGameDB')
+	}
 })
 </script>

@@ -1,5 +1,5 @@
 <template>
-	<div class="px-8 pt-4 flex justify-between">
+	<div class="px-8 pt-[4.5rem] flex justify-between">
 		<h5 class="text-3xl font-bold">Library ({{ games.length }})</h5>
 
 		<div class="w-full md:w-56">

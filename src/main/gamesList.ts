@@ -12,6 +12,15 @@ export async function clipsList(gameName: string) {
 	return clips
 }
 
+export async function getCountOfClipsSinceLastUpdate() {
+	const settings = await prisma.appSettings.findFirst()
+	if (!settings) return 0
+
+	const lastUpdate = settings.lastGameDBUpdate
+	const clips = await prisma.clip.count({ where: { timestamp: { gte: lastUpdate } } })
+	return clips
+}
+
 export async function buildGameDB(fromScratch = false) {
 	if (fromScratch) {
 		await prisma.clip.deleteMany({})
@@ -25,6 +34,11 @@ export async function buildGameDB(fromScratch = false) {
 		console.log(`Reading clips for ${game.name}`)
 		await readClipsFolderAndSave(game.name)
 	}
+
+	await prisma.appSettings.update({
+		where: { id: 1 },
+		data: { lastGameDBUpdate: new Date() }
+	})
 
 	await getAndSaveGamePosters()
 
