@@ -48,11 +48,13 @@ export async function readClipsFolderAndSave(gameName: string) {
 		const clipsInDb = await prisma.clip.findMany({ where: { gameName } })
 		const clipsInDbNames = clipsInDb.map((clip) => clip.filename)
 
-		const clips = fs
-			.readdirSync(path.join(settings.gameFolder, game.name))
-			.filter((clip) => !clipsInDbNames.includes(clip))
+		const clipsInFolder = fs.readdirSync(path.join(settings.gameFolder, game.name))
+		const clips = clipsInFolder.filter((clip) => clip.endsWith('.mp4') && !clipsInDbNames.includes(clip))
 
-		const clipsToDelete = clipsInDbNames.filter((clip) => !clips.includes(clip))
+		const clipsToDelete = clipsInDbNames.filter(
+			(clip) => !fs.existsSync(path.join(settings.gameFolder, game.name, clip))
+		)
+
 		await prisma.clip.deleteMany({ where: { filename: { in: clipsToDelete } } })
 
 		let dirSize = 0
@@ -76,10 +78,13 @@ export async function readClipsFolderAndSave(gameName: string) {
 			data: clipsParsedWithId
 		})
 
-		await prisma.game.update({
-			where: { name: gameName },
-			data: { lastClipDate, size: dirSize, nOfClips }
-		})
+		// If all the clips were filtered (no new clips) skip the update step
+		if (!(clips.length === 0 && clipsInFolder.length > 0)) {
+			await prisma.game.update({
+				where: { name: gameName },
+				data: { lastClipDate, size: dirSize, nOfClips }
+			})
+		}
 
 		return true
 	} catch (error) {

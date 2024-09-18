@@ -1,9 +1,9 @@
-import { AppSettings } from '@prisma/client'
+import { AppSettings, Game } from '@prisma/client'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useMainStore = defineStore('main', () => {
-	const selectedGameName = ref('')
+	const selectedGame = ref<Game | null>(null)
 	const selectedClipId = ref('')
 	const settings = ref<AppSettings | null>(null)
 
@@ -12,5 +12,5 @@ export const useMainStore = defineStore('main', () => {
 		settings.value = response
 	}
 
-	return { selectedGameName, selectedClipId, settings, getSettings }
+	return { selectedGame, selectedClipId, settings, getSettings }
 })

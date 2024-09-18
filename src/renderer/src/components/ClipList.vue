@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-col gap-y-4 w-[25rem] bg-gray-700 p-4 h-full overflow-y-scroll">
+	<div class="flex flex-col gap-y-4 w-[25rem] bg-gray-700 p-4 overflow-y-scroll">
 		<div v-for="clip in clips" :key="clip.id">
 			<div
 				class="clip-card bg-gray-600 font-bold rounded p-2 flex justify-between cursor-pointer"
@@ -31,7 +31,8 @@ const mainStore = useMainStore()
 const clips = ref<Clip[]>([])
 
 onMounted(() => {
-	window.electron.ipcRenderer.invoke('clipsList', mainStore.selectedGameName).then((res: Clip[]) => {
+	if (!mainStore.selectedGame) return
+	window.electron.ipcRenderer.invoke('clipsList', mainStore.selectedGame.name).then((res: Clip[]) => {
 		clips.value = res
 	})
 })

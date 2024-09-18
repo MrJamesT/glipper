@@ -1,9 +1,12 @@
 import { readClipsFolderAndSave, readGamesFolderAndSave } from './fsOperations'
 import { getAndSaveGamePosters } from './gamePosters'
+import { mainWindow } from './mainWindow'
 import { prisma } from './prisma'
+import { getSettings } from './settings'
 
 export async function gamesList() {
 	const games = await prisma.game.findMany({ where: { nOfClips: { gt: 0 } } })
+	mainWindow!.webContents.send('gamesList', games)
 	return games
 }
 
@@ -18,6 +21,7 @@ export async function getCountOfClipsSinceLastUpdate() {
 
 	const lastUpdate = settings.lastGameDBUpdate
 	const clips = await prisma.clip.count({ where: { timestamp: { gte: lastUpdate } } })
+	mainWindow!.webContents.send('clipsSinceLastUpdate', clips)
 	return clips
 }
 
@@ -40,6 +44,8 @@ export async function buildGameDB(fromScratch = false) {
 		data: { lastGameDBUpdate: new Date() }
 	})
 
+	getCountOfClipsSinceLastUpdate()
+	getSettings()
 	await getAndSaveGamePosters()
 
 	return true

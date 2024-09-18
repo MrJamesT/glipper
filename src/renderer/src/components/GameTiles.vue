@@ -27,7 +27,7 @@
 				class="game-card rounded flex flex-col justify-between cursor-pointer"
 				:class="{ 'bg-gray-800': !game.poster }"
 				:style="backgroundImage(game.poster)"
-				@click="mainStore.selectedGameName = game.name"
+				@click="mainStore.selectedGame = game"
 			>
 				<div class="flex flex-col justify-end items-start w-full h-full p-3">
 					<Badge :value="game.nOfClips + ' clips'" class="mb-2 shadow-lg" severity="primary"></Badge>
@@ -51,6 +51,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { Game } from '@prisma/client'
+import defaultImage from '../assets/default.jpg'
 
 import Button from 'primevue/button'
 import Badge from 'primevue/badge'
@@ -72,9 +73,14 @@ const sortOptions = ref([
 const mainStore = useMainStore()
 
 const backgroundImage = (url: string | null) => {
-	if (!url) return {}
-	return {
-		backgroundImage: `url(${url})`
+	if (!url) {
+		return {
+			backgroundImage: `url(${defaultImage})`
+		}
+	} else {
+		return {
+			backgroundImage: `url(${url})`
+		}
 	}
 }
 
@@ -97,7 +103,8 @@ const sortedGames = computed(() => {
 })
 
 onMounted(() => {
-	window.electron.ipcRenderer.invoke('gamesList').then((res: Game[]) => {
+	window.electron.ipcRenderer.send('gamesList')
+	window.electron.ipcRenderer.on('gamesList', (_, res: Game[]) => {
 		games.value = res
 	})
 })

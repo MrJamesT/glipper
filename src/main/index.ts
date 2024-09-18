@@ -7,25 +7,32 @@ import { prisma } from './prisma'
 import { buildGameDB, gamesList, clipsList, getCountOfClipsSinceLastUpdate } from './gamesList'
 import { getClipDetails } from './fsOperations'
 import { cutClip, deleteClip } from './clipOperations'
+import { mainWindow, setMainWindow } from './mainWindow'
+import { getSettings } from './settings'
 
 function createWindow(): void {
 	// Create the browser window.
-	const mainWindow = new BrowserWindow({
-		width: 1200,
-		height: 800,
-		title: 'Glipper',
-		resizable: true,
-		show: false,
-		autoHideMenuBar: true,
-		...(process.platform === 'linux' ? { icon } : {}),
-		webPreferences: {
-			preload: join(__dirname, '../preload/index.js'),
-			sandbox: false,
-			webSecurity: false
-		}
-	})
+	setMainWindow(
+		new BrowserWindow({
+			width: 1200,
+			height: 800,
+			title: 'Glipper',
+			resizable: true,
+			show: false,
+			autoHideMenuBar: true,
+			...(process.platform === 'linux' ? { icon } : {}),
+			webPreferences: {
+				preload: join(__dirname, '../preload/index.js'),
+				sandbox: false,
+				webSecurity: false
+			}
+		})
+	)
+
+	if (!mainWindow) return
 
 	mainWindow.on('ready-to-show', () => {
+		if (!mainWindow) return
 		mainWindow.show()
 		mainWindow.focus()
 		mainWindow.maximize()
@@ -62,13 +69,16 @@ app.whenReady().then(() => {
 	// IPC Endpoints
 	ipcMain.handle('gamesList', async () => await gamesList())
 	ipcMain.handle('clipsList', async (_, gameId) => await clipsList(gameId))
-	ipcMain.handle('getSettings', async () => await prisma.appSettings.findFirst())
+	ipcMain.handle('getSettings', async () => await getSettings())
 	ipcMain.handle('buildGameDB', async () => await buildGameDB(false))
 	ipcMain.handle('rebuildGameDB', async () => await buildGameDB(true))
 	ipcMain.handle('getClipDetails', async (_, clipId) => await getClipDetails(clipId))
 	ipcMain.handle('cutClip', async (_, clipId, reqData) => await cutClip(clipId, reqData))
 	ipcMain.handle('deleteClip', async (_, clipId) => await deleteClip(clipId))
 	ipcMain.handle('clipsSinceLastUpdate', async () => await getCountOfClipsSinceLastUpdate())
+
+	ipcMain.on('gamesList', async () => await gamesList())
+	ipcMain.on('clipsSinceLastUpdate', async () => await getCountOfClipsSinceLastUpdate())
 
 	createWindow()
 

@@ -129,11 +129,11 @@ const deleteClip = async () => {
 }
 
 watch(
-	() => [mainStore.selectedGameName, mainStore.selectedClipId],
+	() => [mainStore.selectedGame, mainStore.selectedClipId],
 	async () => {
-		if (mainStore.selectedGameName.length > 0 && mainStore.selectedClipId.length > 0 && video.value) {
+		if (mainStore.selectedGame && mainStore.selectedClipId.length > 0 && video.value) {
 			await getClipDetails()
-			video.value.src = `${mainStore.settings!.gameFolder}/${mainStore.selectedGameName}/${clipDetails.value.name}`
+			video.value.src = `${mainStore.settings!.gameFolder}/${mainStore.selectedGame.name}/${clipDetails.value.name}`
 			video.value.currentTime = clipSettings.value.startTime
 			video.value.play()
 		}

@@ -1,10 +1,8 @@
 <template>
-	<div class="h-dvh w-full">
+	<div class="w-full">
 		<Header />
-		<div class="h-dvh">
-			<GameTiles v-if="mainStore.selectedGameName === ''" />
-			<GamePage v-else />
-		</div>
+		<GameTiles v-if="mainStore.selectedGame === null" />
+		<GamePage v-else />
 	</div>
 </template>
 
@@ -17,6 +15,7 @@ import Header from './components/Header.vue'
 
 import { useMainStore } from './stores/mainStore'
 import GamePage from './components/GamePage.vue'
+import { AppSettings } from '@prisma/client'
 
 const mainStore = useMainStore()
 
@@ -30,5 +29,10 @@ onMounted(async () => {
 		console.log('Game DB is older than 4 hours, rebuilding...')
 		window.electron.ipcRenderer.invoke('buildGameDB')
 	}
+
+	// All ON handlers
+	window.electron.ipcRenderer.on('getSettings', (_, res: AppSettings) => {
+		mainStore.settings = res
+	})
 })
 </script>
