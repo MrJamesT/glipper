@@ -1,0 +1,27 @@
+name: Pre-Release Verification Pipeline
+
+on:
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    check-version:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Check server/package.json version
+              run: |
+                  git fetch origin main
+                  BASE_VERSION=$(git show origin/main:package.json | jq '.version' | tr -d '"')
+                  PR_VERSION=$(cat package.json | jq '.version' | tr -d '"')
+                  if [ "$(printf '%s\n' "$PR_VERSION" "$BASE_VERSION" | sort -V | head -n 1)" = "$PR_VERSION" ]; then
+                    echo "The package.json version ($PR_VERSION) must be higher than the base branch version ($BASE_VERSION)"
+                    exit 1
+                  else
+                    echo "The package.json version ($PR_VERSION) is higher than the base branch version ($BASE_VERSION)"
+                  fi

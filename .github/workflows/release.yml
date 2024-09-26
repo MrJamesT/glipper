@@ -1,0 +1,41 @@
+name: Create Release
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build-and-release:
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 20
+
+            - name: Build the Electron app
+              run: |
+                  npm install -g pnpm
+                  pnpm install
+                  pnpm run build:win
+
+            - name: Get version from package.json
+              id: get_version
+              run: echo "::set-output name=VERSION::$(node -p "require('./package.json').version")"
+
+            - name: Create GitHub release
+              uses: softprops/action-gh-release@v1
+              with:
+                  token: ${{ secrets.PUSH_RELEASE_TOKEN }}
+                  draft: false
+                  prerelease: false
+                  tag_name: 'v${{ steps.get_version.outputs.VERSION }}'
+                  name: 'Release v${{ steps.get_version.outputs.VERSION }}'
+                  body: 'New Glipper release - Patch Notes TBD...'
+                  files: |
+                      out/make/squirrel.windows/x64/*
