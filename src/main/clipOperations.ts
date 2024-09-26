@@ -1,11 +1,16 @@
 import path from 'path'
 import { prisma } from './prisma'
 import fs from 'fs'
-import { clipboard, ipcMain } from 'electron'
 
 import ffmpeg from 'fluent-ffmpeg'
 import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg'
+import ffprobeStatic from 'ffprobe-static'
+import { mainWindow } from './mainWindow'
+import { clipsList } from './gamesList'
+import { writeFilePaths } from 'electron-clipboard-ex'
+
 ffmpeg.setFfmpegPath(ffmpegPath)
+ffmpeg.setFfprobePath(ffprobeStatic.path)
 
 interface ClipCutData {
 	startTime: number
@@ -34,9 +39,18 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 				.audioCodec('copy')
 				.setDuration(duration)
 				.output(newClipPath)
+				.on('start', () => {
+					mainWindow!.webContents.send('progress', {
+						action: 'Saving...',
+						percentage: 0
+					})
+				})
 				.on('end', async () => {
 					try {
-						ipcMain.emit('progress', { clipId: clip.id, clipName: clip.filename, progress: 100 })
+						mainWindow!.webContents.send('progress', {
+							action: 'File Saved!',
+							percentage: 100
+						})
 
 						if (reqData.removeOriginal) {
 							fs.unlinkSync(oldClipPath)
@@ -50,17 +64,18 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 							data: {
 								filename: reqData.customName,
 								size: +sizeMB,
-								timestamp: new Date(),
+								timestamp: clip.timestamp,
 								cut: true,
 								game: { connect: { name: clip.gameName } }
 							}
 						})
 
 						if (reqData.pasteToClipboard) {
-							clipboard.writeBuffer('public.file-url', Buffer.from(newClipPath))
+							writeFilePaths([newClipPath])
 						}
 
 						resolve(true)
+						clipsList(clip.gameName)
 					} catch (error) {
 						console.log(error)
 						resolve(false)
@@ -68,8 +83,12 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 				})
 				.on('progress', (progress) => {
 					const time = parseInt(progress.timemark.replace(/:/g, ''))
-					const percent = (time / duration) * 100
-					ipcMain.emit('progress', { clipId: clip.id, clipName: clip.filename, progress: percent })
+					const percentage = (time / duration) * 100
+
+					mainWindow!.webContents.send('progress', {
+						action: 'Saving...',
+						percentage
+					})
 				})
 				.on('error', (err) => {
 					console.log(err)
@@ -94,9 +113,61 @@ export async function deleteClip(clipId: string) {
 		fs.unlinkSync(path.join(settings.gameFolder, clip.gameName, clip.filename))
 
 		await prisma.clip.delete({ where: { id: clipId } })
+		clipsList(clip.gameName)
 		return true
 	} catch (error) {
 		console.log(error)
 		return false
+	}
+}
+
+export async function getClipsThumbnail(clipIds: string[]) {
+	try {
+		const settings = await prisma.appSettings.findFirst()
+		if (!settings) return
+
+		const clips = await prisma.clip.findMany({ where: { id: { in: clipIds } } })
+		if (!clips || clips.length === 0) return
+
+		// Get the thumbnail of each clip through ffmpeg
+		const thumbnailsGenerated = await Promise.all(
+			clips.map(async (clip) => {
+				const clipPath = path.join(settings.gameFolder, clip.gameName, clip.filename)
+				const thumbsFolder = path.join(settings.gameFolder, 'thumbs')
+				const thumbnailPath = path.join(thumbsFolder, clip.filename + '.jpg')
+
+				if (!fs.existsSync(thumbsFolder)) {
+					fs.mkdirSync(thumbsFolder)
+				}
+
+				if (fs.existsSync(thumbnailPath)) {
+					return true
+				}
+
+				return new Promise((resolve) => {
+					ffmpeg(clipPath)
+						.screenshots({
+							count: 1,
+							filename: clip.filename + '.jpg',
+							folder: thumbsFolder,
+							size: '320x180'
+						})
+						.outputOptions('-q:v 2')
+						.on('end', () => {
+							resolve(true)
+						})
+						.on('error', () => {
+							resolve(false)
+						})
+				})
+			})
+		)
+
+		const allThumbnailsGenerated = thumbnailsGenerated.every((result) => result === true)
+		mainWindow!.webContents.send('getThumbnails', allThumbnailsGenerated)
+		return allThumbnailsGenerated
+	} catch (error) {
+		console.log(error)
+		return []
 	}
 }

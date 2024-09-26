@@ -1,8 +1,9 @@
 <template>
-	<div class="w-full">
+	<div class="w-full h-dvh flex flex-col">
 		<Header />
 		<GameTiles v-if="mainStore.selectedGame === null" />
 		<GamePage v-else />
+		<Toast position="bottom-right" />
 	</div>
 </template>
 
@@ -16,11 +17,14 @@ import Header from './components/Header.vue'
 import { useMainStore } from './stores/mainStore'
 import GamePage from './components/GamePage.vue'
 import { AppSettings } from '@prisma/client'
+import Toast from 'primevue/toast'
 
 const mainStore = useMainStore()
 
 onMounted(async () => {
 	await mainStore.getSettings()
+	mainStore.startListeners()
+
 	if (
 		!mainStore.settings?.lastGameDBUpdate ||
 		differenceInHours(new Date(), new Date(mainStore.settings.lastGameDBUpdate)) > 4

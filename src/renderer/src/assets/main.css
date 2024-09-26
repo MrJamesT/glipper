@@ -26,11 +26,12 @@ html,
 body {
 	height: 100%;
 	margin: 0;
-	/* overflow: hidden; */
+	overflow: hidden;
 }
 
 #app {
 	height: 100dvh;
 	display: flex;
 	flex-direction: column;
+	overflow-y: scroll;
 }

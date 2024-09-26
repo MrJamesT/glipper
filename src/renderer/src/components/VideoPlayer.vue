@@ -1,6 +1,6 @@
 <template>
-	<div class="flex flex-col justify-center items-center w-full p-12">
-		<video ref="video" controls class="w-full h-full max-h-[75dvh]"></video>
+	<div class="flex flex-col justify-start items-center w-full p-10 pt-0">
+		<video ref="video" controls class="h-full max-h-[80%] w-full"></video>
 
 		<div class="flex justify-center items-center p-4">
 			<Button
@@ -57,6 +57,7 @@ import Checkbox from 'primevue/checkbox'
 import Chip from 'primevue/chip'
 
 import { useMainStore } from '../stores/mainStore'
+import { Clip } from '@prisma/client'
 const mainStore = useMainStore()
 const toast = useToast()
 
@@ -89,8 +90,10 @@ const getClipDetails = async () => {
 	clipDetails.value.duration = +(+data.duration).toFixed(2)
 	clipDetails.value.fps = +data.fps
 	clipDetails.value.resolution = data.resolution
-	clipSettings.value.startTime = +clipDetails.value.duration - 10 < 0 ? 0 : +clipDetails.value.duration - 10
-	clipSettings.value.endTime = +clipDetails.value.duration
+	clipSettings.value.startTime = +(
+		+clipDetails.value.duration - 10 < 0 ? 0 : +clipDetails.value.duration - 10
+	).toFixed(2)
+	clipSettings.value.endTime = +(+clipDetails.value.duration).toFixed(2)
 	clipDetails.value.size = data.size
 	clipSettings.value.customName = data.name.replace('.mp4', '')
 }
@@ -108,6 +111,16 @@ const saveClip = async () => {
 
 	if (clipCutResult) {
 		toast.add({ severity: 'success', summary: 'Clip saved successfully!', life: 3000 })
+
+		const clips = mainStore.sortedClips
+		if (mainStore.settings?.clipSwitchDirection) {
+			const clipIndex = clips.findIndex((c: Clip) => c.id === mainStore.selectedClipId)
+			if (mainStore.settings.clipSwitchDirection === 'up') {
+				if (clipIndex > 0) mainStore.selectedClipId = clips[clipIndex - 1].id
+			} else {
+				if (clipIndex < clips.length - 1) mainStore.selectedClipId = clips[clipIndex + 1].id
+			}
+		}
 	} else {
 		toast.add({ severity: 'error', summary: 'Error saving clip!', life: 3000 })
 	}
@@ -135,6 +148,7 @@ watch(
 			await getClipDetails()
 			video.value.src = `${mainStore.settings!.gameFolder}/${mainStore.selectedGame.name}/${clipDetails.value.name}`
 			video.value.currentTime = clipSettings.value.startTime
+			video.value.volume = 0.1
 			video.value.play()
 		}
 	}

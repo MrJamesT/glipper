@@ -57,9 +57,6 @@ export async function readClipsFolderAndSave(gameName: string) {
 
 		await prisma.clip.deleteMany({ where: { filename: { in: clipsToDelete } } })
 
-		let dirSize = 0
-		let nOfClips = 0
-		let lastClipDate = new Date('1970-01-01T00:00:00')
 		const clipsParsedWithId = clips
 			.filter((clip) => clip.endsWith('.mp4'))
 			.map((clip) => {
@@ -67,24 +64,45 @@ export async function readClipsFolderAndSave(gameName: string) {
 
 				const { size, birthtime } = fs.statSync(path.join(settings.gameFolder, game.name, clip))
 				const sizeMB = +(size / (1024 * 1024)).toFixed(2)
-				dirSize += +sizeMB
-				lastClipDate = birthtime > lastClipDate ? birthtime : lastClipDate
-				nOfClips++
 
-				return { filename: clip, gameName, size: +sizeMB, timestamp: birthtime, cut }
+				// Match date and time from the filename - format: YYYY.MM.DD - HH.MM.SS
+				const parsedDateTimeFromName = clip.match(/(\d{4}\.\d{2}\.\d{2}) - (\d{2}\.\d{2}\.\d{2})/)
+				const parsedDate = parsedDateTimeFromName
+					? new Date(parsedDateTimeFromName[1] + ' ' + parsedDateTimeFromName[2].replace(/\./g, ':'))
+					: new Date(birthtime)
+
+				return { filename: clip, gameName, size: +sizeMB, timestamp: parsedDate, cut }
 			})
 
 		await prisma.clip.createMany({
 			data: clipsParsedWithId
 		})
 
-		// If all the clips were filtered (no new clips) skip the update step
-		if (!(clips.length === 0 && clipsInFolder.length > 0)) {
-			await prisma.game.update({
-				where: { name: gameName },
-				data: { lastClipDate, size: dirSize, nOfClips }
+		// Find stats in clips and aggregate them to the game
+		const [lastClipDateResult, totalSizeResult, nOfClips] = await prisma.$transaction([
+			prisma.clip.aggregate({
+				where: { gameName },
+				_max: { timestamp: true }
+			}),
+			prisma.clip.aggregate({
+				where: { gameName },
+				_sum: { size: true }
+			}),
+			prisma.clip.count({
+				where: { gameName }
 			})
-		}
+		])
+		const lastClipDate = lastClipDateResult._max.timestamp
+		const totalSize = totalSizeResult._sum.size
+
+		await prisma.game.update({
+			where: { name: gameName },
+			data: {
+				lastClipDate: lastClipDate || new Date('1970-01-01'),
+				size: totalSize || 0,
+				nOfClips: nOfClips || 0
+			}
+		})
 
 		return true
 	} catch (error) {

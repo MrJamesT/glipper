@@ -6,9 +6,9 @@ import icon from '../../resources/icon.png?asset'
 import { prisma } from './prisma'
 import { buildGameDB, gamesList, clipsList, getCountOfClipsSinceLastUpdate } from './gamesList'
 import { getClipDetails } from './fsOperations'
-import { cutClip, deleteClip } from './clipOperations'
+import { cutClip, deleteClip, getClipsThumbnail } from './clipOperations'
 import { mainWindow, setMainWindow } from './mainWindow'
-import { getSettings } from './settings'
+import { getSettings, saveSettings } from './settings'
 
 function createWindow(): void {
 	// Create the browser window.
@@ -70,6 +70,7 @@ app.whenReady().then(() => {
 	ipcMain.handle('gamesList', async () => await gamesList())
 	ipcMain.handle('clipsList', async (_, gameId) => await clipsList(gameId))
 	ipcMain.handle('getSettings', async () => await getSettings())
+	ipcMain.handle('saveSettings', async (_, settings) => saveSettings(settings))
 	ipcMain.handle('buildGameDB', async () => await buildGameDB(false))
 	ipcMain.handle('rebuildGameDB', async () => await buildGameDB(true))
 	ipcMain.handle('getClipDetails', async (_, clipId) => await getClipDetails(clipId))
@@ -78,7 +79,9 @@ app.whenReady().then(() => {
 	ipcMain.handle('clipsSinceLastUpdate', async () => await getCountOfClipsSinceLastUpdate())
 
 	ipcMain.on('gamesList', async () => await gamesList())
+	ipcMain.on('clipsList', async (_, gameId) => await clipsList(gameId))
 	ipcMain.on('clipsSinceLastUpdate', async () => await getCountOfClipsSinceLastUpdate())
+	ipcMain.on('getThumbnails', async (_, clipIds) => await getClipsThumbnail(clipIds))
 
 	createWindow()
 

@@ -1,5 +1,5 @@
 <template>
-	<div class="px-8 pt-[4.5rem] flex justify-between">
+	<div class="px-8 pt-6 flex justify-between">
 		<h5 class="text-3xl font-bold">Library ({{ games.length }})</h5>
 
 		<div class="w-full md:w-56">
@@ -30,7 +30,11 @@
 				@click="mainStore.selectedGame = game"
 			>
 				<div class="flex flex-col justify-end items-start w-full h-full p-3">
-					<Badge :value="game.nOfClips + ' clips'" class="mb-2 shadow-lg" severity="primary"></Badge>
+					<Badge
+						:value="game.nOfClips + (game.nOfClips > 1 ? ' clips' : ' clip')"
+						class="mb-2 shadow-lg"
+						severity="primary"
+					></Badge>
 					<Badge :value="gameSizeMBOrGB(game.size)" class="shadow-lg" severity="info"></Badge>
 				</div>
 			</div>

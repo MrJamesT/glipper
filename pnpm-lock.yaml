@@ -26,6 +26,9 @@ dependencies:
   date-fns:
     specifier: ^3.6.0
     version: 3.6.0
+  electron-clipboard-ex:
+    specifier: ^1.3.3
+    version: 1.3.3
   electron-updater:
     specifier: ^6.1.7
     version: 6.2.1
@@ -2262,6 +2265,15 @@ packages:
       - supports-color
     dev: true
 
+  /electron-clipboard-ex@1.3.3:
+    resolution: {integrity: sha512-bny+IQhbLd7ur4NMKJ6P9+WRG2KTF6yGrbKem2N/zIdK64Yk3hCqVEiuyON6b2aOeEUDGkvS8LCkk4Q2IimehA==}
+    os: [darwin, win32]
+    requiresBuild: true
+    dependencies:
+      node-addon-api: 4.3.0
+      node-gyp-build: 4.8.2
+    dev: false
+
   /electron-publish@24.13.1:
     resolution: {integrity: sha512-2ZgdEqJ8e9D17Hwp5LEq5mLQPjqU3lv/IALvgp+4W8VeNhryfGhYEQC/PgDPMrnWUp+l60Ou5SJLsu+k4mhQ8A==}
     dependencies:
@@ -3386,6 +3398,15 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /node-addon-api@4.3.0:
+    resolution: {integrity: sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==}
+    dev: false
+
+  /node-gyp-build@4.8.2:
+    resolution: {integrity: sha512-IRUxE4BVsHWXkV/SFOut4qTlagw2aM8T5/vnTsmrHJvVoKueJHRc/JaFND7QDDc61kLYUJ6qlZM3sqTSyx2dTw==}
+    hasBin: true
+    dev: false
 
   /node-releases@2.0.18:
     resolution: {integrity: sha512-d9VeXT4SJ7ZeOqGX6R5EM022wpL+eWPooLI+5UpWn2jCT1aosUQEhQP214x33Wkwx3JQMvIm+tIoVOdodFS40g==}

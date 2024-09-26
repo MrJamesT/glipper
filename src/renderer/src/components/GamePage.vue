@@ -15,14 +15,19 @@
 				}}
 			</div>
 			<div class="mt-2">
-				<Badge :value="mainStore.selectedGame.nOfClips + ' clips'" severity="primary"></Badge>
+				<Badge
+					:value="
+						mainStore.selectedGame.nOfClips + (mainStore.selectedGame.nOfClips > 1 ? ' clips' : ' clip')
+					"
+					severity="primary"
+				></Badge>
 				<Badge :value="gameSizeMBOrGB(mainStore.selectedGame.size)" class="mx-2" severity="info"></Badge>
 			</div>
 		</div>
 	</div>
 
 	<!-- Clip list and video player -->
-	<div class="flex h-100">
+	<div class="flex h-full grow overflow-y-auto">
 		<ClipList />
 		<VideoPlayer />
 	</div>

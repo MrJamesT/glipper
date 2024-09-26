@@ -12,6 +12,7 @@ export async function gamesList() {
 
 export async function clipsList(gameName: string) {
 	const clips = await prisma.clip.findMany({ where: { gameName } })
+	mainWindow!.webContents.send('clipsList', clips)
 	return clips
 }
 
@@ -34,10 +35,19 @@ export async function buildGameDB(fromScratch = false) {
 	await readGamesFolderAndSave()
 
 	const games = await prisma.game.findMany()
-	for (const game of games) {
-		console.log(`Reading clips for ${game.name}`)
+	for (const [index, game] of games.entries()) {
 		await readClipsFolderAndSave(game.name)
+
+		mainWindow!.webContents.send('progress', {
+			action: `Building (${index}/${games.length})...`,
+			percentage: Math.round((index / games.length) * 100)
+		})
 	}
+
+	mainWindow!.webContents.send('progress', {
+		action: 'Game DB Built!',
+		percentage: 100
+	})
 
 	await prisma.appSettings.update({
 		where: { id: 1 },
