@@ -13,6 +13,7 @@
 		"typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
 		"start": "electron-vite preview",
 		"dev": "electron-vite dev",
+		"dev:watch": "electron-vite dev --watch",
 		"build": "pnpm run typecheck && node copy-prisma-files.js && electron-vite build",
 		"postinstall": "electron-builder install-app-deps",
 		"build:unpack": "pnpm run build && electron-builder --dir",
