@@ -16,7 +16,7 @@ import Header from './components/Header.vue'
 
 import { useMainStore } from './stores/mainStore'
 import GamePage from './components/GamePage.vue'
-import { AppSettings } from '@prisma/client'
+import { AppSettings } from '../../generated/client'
 import Toast from 'primevue/toast'
 
 const mainStore = useMainStore()

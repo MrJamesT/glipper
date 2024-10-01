@@ -1,4 +1,4 @@
-import { AppSettings, Clip, Game } from '@prisma/client'
+import { AppSettings, Clip, Game } from '../../../generated/client'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 

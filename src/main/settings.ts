@@ -1,4 +1,4 @@
-import { AppSettings } from '@prisma/client'
+import { AppSettings } from '../generated/client'
 import { mainWindow } from './mainWindow'
 import { prisma } from './prisma'
 
@@ -13,7 +13,7 @@ export async function saveSettings(settings: AppSettings) {
 		const currentSettings = await prisma.appSettings.findUnique({
 			where: { id: 1 }
 		})
-	
+
 		let updatedSettings: AppSettings
 		if (currentSettings) {
 			updatedSettings = await prisma.appSettings.update({
@@ -25,7 +25,7 @@ export async function saveSettings(settings: AppSettings) {
 				data: { ...settings, lastGameDBUpdate: new Date() }
 			})
 		}
-	
+
 		mainWindow!.webContents.send('getSettings', updatedSettings)
 		return true
 	} catch (error) {

@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { formatDistanceToNowStrict } from 'date-fns'
-import { Game } from '@prisma/client'
+import { Game } from '../../../generated/client'
 import defaultImage from '../assets/default.jpg'
 
 import Button from 'primevue/button'

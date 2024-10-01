@@ -57,7 +57,7 @@ import Checkbox from 'primevue/checkbox'
 import Chip from 'primevue/chip'
 
 import { useMainStore } from '../stores/mainStore'
-import { Clip } from '@prisma/client'
+import { Clip } from '../../../generated/client'
 const mainStore = useMainStore()
 const toast = useToast()
 
