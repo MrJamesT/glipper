@@ -3,7 +3,10 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
-import { prisma } from './prisma'
+import fs from 'fs'
+import { dbPath, dbUrl, latestMigration, Migration } from './constants'
+import log from 'electron-log'
+import { prisma, runPrismaCommand } from './prisma'
 import { buildGameDB, gamesList, clipsList, getCountOfClipsSinceLastUpdate } from './gamesList'
 import { getClipDetails } from './fsOperations'
 import { cutClip, deleteClip, getClipsThumbnail } from './clipOperations'
@@ -52,12 +55,60 @@ function createWindow(): void {
 	}
 }
 
+async function runPrismaMigrations() {
+	let needsMigration: boolean
+	const dbExists = fs.existsSync(dbPath)
+	if (!dbExists) {
+		needsMigration = true
+		// prisma for whatever reason has trouble if the database file does not exist yet.
+		// So just touch it here
+		fs.closeSync(fs.openSync(dbPath, 'w'))
+	} else {
+		try {
+			const latest: Migration[] = await prisma.$queryRaw`select * from _prisma_migrations order by finished_at`
+			needsMigration = latest[latest.length - 1]?.migration_name !== latestMigration
+		} catch (e) {
+			log.error(e)
+			needsMigration = true
+		}
+	}
+
+	if (needsMigration) {
+		try {
+			const schemaPath = join(
+				app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
+				'prisma',
+				'schema.prisma'
+			)
+			log.info(`Needs a migration. Running prisma migrate with schema path ${schemaPath}`)
+
+			// first create or migrate the database! If you were deploying prisma to a cloud service, this migrate deploy
+			// command you would run as part of your CI/CD deployment. Since this is an electron app, it just needs
+			// to run every time the production app is started. That way if the user updates the app and the schema has
+			// changed, it will transparently migrate their DB.
+			await runPrismaCommand({
+				command: ['migrate', 'deploy', '--schema', schemaPath],
+				dbUrl
+			})
+			log.info('Migration done.')
+		} catch (e) {
+			log.error(e)
+			process.exit(1)
+		}
+	} else {
+		log.info('Does not need migration')
+	}
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 	// Set app user model id for windows
 	electronApp.setAppUserModelId('com.electron')
+
+	// Run prisma migrations on app start (if needed)
+	await runPrismaMigrations()
 
 	// Default open or close DevTools by F12 in development
 	// and ignore CommandOrControl + R in production.

@@ -5,3 +5,4 @@ out
 *.log*
 .env
 *.db
+src/generated

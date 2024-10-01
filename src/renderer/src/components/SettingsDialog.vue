@@ -66,13 +66,17 @@ const saveSettings = async () => {
 		clipboardToggle: settings.value.clipboardToggle,
 		clipSwitchDirection: settings.value.clipSwitchDirection
 	})
-	if (saveResult && mainStore.settings) {
-		mainStore.settings.clipSwitchDirection = settings.value.clipSwitchDirection
-		mainStore.settings.clipboardToggle = settings.value.clipboardToggle
-		mainStore.settings.gameFolder = settings.value.gameFolder
+	if (saveResult) {
+		mainStore.settings = {
+			id: 1,
+			gameFolder: settings.value.gameFolder,
+			clipboardToggle: settings.value.clipboardToggle,
+			clipSwitchDirection: settings.value.clipSwitchDirection,
+			lastGameDBUpdate: new Date()
+		}
 
 		toast.add({ severity: 'success', summary: 'Settings saved successfully!', life: 3000 })
-	} else {
+	} else if (!saveResult) {
 		toast.add({ severity: 'error', summary: 'Failed to save settings!', life: 3000 })
 	}
 	dialog.value = false

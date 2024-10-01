@@ -3,25 +3,24 @@ productName: glipper
 directories:
   buildResources: build
 files:
-  - "/**/*"
   - "!**/.vscode/*"
   - "!src/*"
+  - "out/**/*"
+  - "prisma/**/*"
+  - "!prisma/dev.db"
+  - "resources/**/*"
   - "!electron.vite.config.{js,ts,mjs,cjs}"
   - "!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
   - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
   - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
-  - "prisma/**/*"
-  - "!prisma/*.db"
-  - "!**/node_modules/@prisma/engines/introspection-engine*"
-  - "!**/node_modules/@prisma/engines/schema-engine*"
-  - "!**/node_modules/@prisma/engines/prisma-fmt*"
-  - "!**/node_modules/@prisma/engines/query_engine-*"
-  - "!**/node_modules/@prisma/engines/libquery_engine*"
-  - "!**/node_modules/prisma/query_engine*"
-  - "!**/node_modules/prisma/libquery_engine*"
-  - "!**/node_modules/prisma/**/*.mjs"
+extraResources:
+  - "node_modules/.prisma/**/*"
+  - node_modules/@prisma/engines/schema-engine*
+  - node_modules/@prisma/engines/query*
+  - node_modules/@prisma/engines/libquery*
 asarUnpack:
   - resources/**
+  - prisma
 win:
   executableName: glipper
 nsis:
