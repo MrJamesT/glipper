@@ -1,13 +1,18 @@
 import path from 'path'
 import { prisma } from './prisma'
+import { promisify } from 'util'
 import fs from 'fs'
-import ffmpeg from 'fluent-ffmpeg'
+import log from 'electron-log'
 
-import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg'
-ffmpeg.setFfmpegPath(ffmpegPath)
+import ffmpeg, { FfprobeData } from 'fluent-ffmpeg'
+import ffmpegPath from 'ffmpeg-static'
+import ffprobePath from 'ffprobe-static'
 
-import ffprobe from 'ffprobe'
-import ffprobeStatic from 'ffprobe-static'
+if (ffmpegPath !== null) {
+	ffmpeg.setFfmpegPath(ffmpegPath.replace('app.asar', 'app.asar.unpacked'))
+	ffmpeg.setFfprobePath(ffprobePath.path.replace('app.asar', 'app.asar.unpacked'))
+}
+const ffprobe = promisify(ffmpeg.ffprobe)
 
 export async function readGamesFolderAndSave() {
 	try {
@@ -32,7 +37,7 @@ export async function readGamesFolderAndSave() {
 
 		return true
 	} catch (error) {
-		console.error(error)
+		log.error(error)
 		return false
 	}
 }
@@ -106,7 +111,7 @@ export async function readClipsFolderAndSave(gameName: string) {
 
 		return true
 	} catch (error) {
-		console.error(error)
+		log.error(error)
 		return false
 	}
 }
@@ -119,17 +124,15 @@ export async function getClipDetails(clipId: string) {
 		const clip = await prisma.clip.findUnique({ where: { id: clipId } })
 		if (!clip) return
 
-		const meta = await ffprobe(path.join(settings.gameFolder, clip.gameName, clip.filename), {
-			path: ffprobeStatic.path
-		})
+		const meta = (await ffprobe(path.join(settings.gameFolder, clip.gameName, clip.filename))) as FfprobeData
 		const duration = meta.streams[0].duration
-		const fpsDiv = meta.streams[0].avg_frame_rate.split('/')
+		const fpsDiv = meta.streams[0].avg_frame_rate?.split('/') || []
 		const fps = fpsDiv[0] && fpsDiv[1] ? Math.round(+fpsDiv[0] / +fpsDiv[1]) : 0
 		const resolution = meta.streams[0].width + 'x' + meta.streams[0].height
 
 		return { name: clip.filename, duration, fps, resolution, size: clip.size }
 	} catch (error) {
-		console.error(error)
+		log.error(error)
 		return false
 	}
 }

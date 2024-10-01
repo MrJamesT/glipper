@@ -1,6 +1,7 @@
 import { AppSettings } from '../generated/client'
 import { mainWindow } from './mainWindow'
 import { prisma } from './prisma'
+import log from 'electron-log'
 
 export async function getSettings() {
 	const settings = await prisma.appSettings.findFirst()
@@ -29,7 +30,7 @@ export async function saveSettings(settings: AppSettings) {
 		mainWindow!.webContents.send('getSettings', updatedSettings)
 		return true
 	} catch (error) {
-		console.error(error)
+		log.error(error)
 		return false
 	}
 }

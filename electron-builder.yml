@@ -13,8 +13,14 @@ files:
   - "!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
   - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
   - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
+  - "node_modules/ffmpeg-static/ffmpeg"
+  - "node_modules/ffmpeg-static/index.js"
+  - "node_modules/ffmpeg-static/package.json"
+  - "node_modules/ffprobe-static/bin/${os}/${arch}/ffmpeg"
+  - "node_modules/ffprobe-static/index.js"
+  - "node_modules/ffprobe-static/package.json"
 extraResources:
-  - "node_modules/.prisma/**/*"
+  - node_modules/.prisma/**/*
   - node_modules/@prisma/engines/schema-engine*
   - node_modules/@prisma/engines/query*
   - node_modules/@prisma/engines/libquery*
@@ -49,5 +55,8 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: MrJamesT
+  repo: glipper
+  private: false
+  releaseType: draft

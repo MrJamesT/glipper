@@ -95,7 +95,7 @@ const getClipDetails = async () => {
 	).toFixed(2)
 	clipSettings.value.endTime = +(+clipDetails.value.duration).toFixed(2)
 	clipDetails.value.size = data.size
-	clipSettings.value.customName = data.name.replace('.mp4', '')
+	clipSettings.value.customName = (data?.name || '').replace('.mp4', '')
 }
 
 const saveClip = async () => {

@@ -12,6 +12,7 @@ import { getClipDetails } from './fsOperations'
 import { cutClip, deleteClip, getClipsThumbnail } from './clipOperations'
 import { mainWindow, setMainWindow } from './mainWindow'
 import { getSettings, saveSettings } from './settings'
+import { autoUpdater } from 'electron-updater'
 
 function createWindow(): void {
 	// Create the browser window.
@@ -109,6 +110,11 @@ app.whenReady().then(async () => {
 
 	// Run prisma migrations on app start (if needed)
 	await runPrismaMigrations()
+
+	// Check for updates
+	log.transports.file.level = 'debug'
+	autoUpdater.logger = log
+	autoUpdater.checkForUpdatesAndNotify()
 
 	// Default open or close DevTools by F12 in development
 	// and ignore CommandOrControl + R in production.

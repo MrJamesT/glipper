@@ -1,16 +1,19 @@
 import path from 'path'
 import { prisma } from './prisma'
 import fs from 'fs'
-
-import ffmpeg from 'fluent-ffmpeg'
-import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg'
-import ffprobeStatic from 'ffprobe-static'
 import { mainWindow } from './mainWindow'
 import { clipsList } from './gamesList'
 import { writeFilePaths } from 'electron-clipboard-ex'
+import log from 'electron-log'
 
-ffmpeg.setFfmpegPath(ffmpegPath)
-ffmpeg.setFfprobePath(ffprobeStatic.path)
+import ffmpeg from 'fluent-ffmpeg'
+import ffmpegPath from 'ffmpeg-static'
+import ffprobePath from 'ffprobe-static'
+
+if (ffmpegPath !== null) {
+	ffmpeg.setFfmpegPath(ffmpegPath.replace('app.asar', 'app.asar.unpacked'))
+	ffmpeg.setFfprobePath(ffprobePath.path.replace('app.asar', 'app.asar.unpacked'))
+}
 
 interface ClipCutData {
 	startTime: number
@@ -77,7 +80,7 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 						resolve(true)
 						clipsList(clip.gameName)
 					} catch (error) {
-						console.log(error)
+						log.error(error)
 						resolve(false)
 					}
 				})
@@ -91,13 +94,13 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 					})
 				})
 				.on('error', (err) => {
-					console.log(err)
+					log.error(err)
 					resolve(false)
 				})
 				.run()
 		})
 	} catch (error) {
-		console.log(error)
+		log.error(error)
 		return false
 	}
 }
@@ -116,7 +119,7 @@ export async function deleteClip(clipId: string) {
 		clipsList(clip.gameName)
 		return true
 	} catch (error) {
-		console.log(error)
+		log.error(error)
 		return false
 	}
 }
@@ -167,7 +170,7 @@ export async function getClipsThumbnail(clipIds: string[]) {
 		mainWindow!.webContents.send('getThumbnails', allThumbnailsGenerated)
 		return allThumbnailsGenerated
 	} catch (error) {
-		console.log(error)
+		log.error(error)
 		return []
 	}
 }
