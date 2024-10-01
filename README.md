@@ -1,34 +1,19 @@
-# glipper
+# Glipper
 
-An Electron application with Vue and TypeScript
+> **⚠️ Alert: This app is currently not finished and is actively being worked on.**
 
-## Recommended IDE Setup
+## Introduction
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
+Glipper is meant to help you cut game clips - mainly clips captured from the NVIDIA APP.
 
-## Project Setup
+It doesn't (currently) do any processing to the files - it simply copies the audio & video to the shortened file.
 
-### Install
+Currently **only supports the file structure used by the nvidia software**, meaning that your clips folder should contain folders with the names of games and those folders should contain the clips.
 
-```bash
-$ pnpm install
-```
+## Contributing
 
-### Development
+Contributions are welcome! Please fork the repository and submit a pull request.
 
-```bash
-$ pnpm dev
-```
+## License
 
-### Build
-
-```bash
-# For windows
-$ pnpm build:win
-
-# For macOS
-$ pnpm build:mac
-
-# For Linux
-$ pnpm build:linux
-```
+This project is licensed under the GPL-3.0 license. See the [COPYING](COPYING) file for details.
