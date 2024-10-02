@@ -2,7 +2,7 @@
 	<div class="bg-gray-800 py-2 w-full flex justify-between items-center relative">
 		<div class="flex items-center">
 			<h5 class="font-black text-2xl ml-4 mr-2">GLIPPER</h5>
-			<Badge value="v1.0 | ALPHA" class="mt-1" severity="primary"></Badge>
+			<Badge value="v1.0.2 | BETA" class="mt-1" severity="primary"></Badge>
 
 			<Button
 				v-if="mainStore.selectedGame"
