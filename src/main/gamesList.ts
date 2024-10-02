@@ -56,6 +56,7 @@ export async function buildGameDB(fromScratch = false) {
 
 	getCountOfClipsSinceLastUpdate()
 	getSettings()
+	gamesList()
 	await getAndSaveGamePosters()
 
 	return true

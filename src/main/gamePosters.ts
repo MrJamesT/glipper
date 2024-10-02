@@ -1,3 +1,4 @@
+import { gamesList } from './gamesList'
 import { prisma } from './prisma'
 
 interface ApiPosterResult {
@@ -27,5 +28,6 @@ export async function getAndSaveGamePosters() {
 		})
 	}
 
+	gamesList()
 	return true
 }

@@ -1,4 +1,5 @@
 import { AppSettings } from '../generated/client'
+import { buildGameDB } from './gamesList'
 import { mainWindow } from './mainWindow'
 import { prisma } from './prisma'
 import log from 'electron-log'
@@ -25,6 +26,10 @@ export async function saveSettings(settings: AppSettings) {
 			updatedSettings = await prisma.appSettings.create({
 				data: { ...settings, lastGameDBUpdate: new Date() }
 			})
+		}
+
+		if (!currentSettings || currentSettings.gameFolder !== updatedSettings.gameFolder) {
+			buildGameDB(true)
 		}
 
 		mainWindow!.webContents.send('getSettings', updatedSettings)
