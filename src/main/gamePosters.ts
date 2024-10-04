@@ -8,9 +8,7 @@ interface ApiPosterResult {
 
 export async function getAndSaveGamePosters() {
 	const games = await prisma.game.findMany()
-	const gameNames = games
-		.filter((game) => (game.poster || '').length === 0 || game.nOfClips > 0)
-		.map((game) => game.name)
+	const gameNames = games.filter((game) => game.nOfClips > 0).map((game) => game.name)
 
 	if (gameNames.length === 0) return true
 

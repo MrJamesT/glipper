@@ -112,7 +112,6 @@ app.whenReady().then(async () => {
 	await runPrismaMigrations()
 
 	// Check for updates
-	log.transports.file.level = 'debug'
 	autoUpdater.logger = log
 	autoUpdater.checkForUpdatesAndNotify()
 
