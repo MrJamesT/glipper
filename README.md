@@ -1,6 +1,6 @@
 # Glipper 🎮🎥
 
-Glipper is an intuitive Electron app that scans your game clips folder and provides a sleek interface for browsing, organizing, and selecting your favorite game clips. It allows you to filter clips by game and pick specific clips for editing or sharing, making clip management a breeze.
+Glipper is an intuitive Electron app that scans your game clips folder and provides a sleek interface for browsing, editing, and organizing your favorite game clips.
 
 > **⚠️ Alert: This app is currently not finished and is actively being worked on.**
 
