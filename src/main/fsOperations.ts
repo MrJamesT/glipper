@@ -30,10 +30,16 @@ export async function readGamesFolderAndSave() {
 		const gamesToDelete = gamesInDbNames.filter((game) => !games.includes(game))
 		const gamesToCreate = games.filter((game) => !gamesInDbNames.includes(game))
 
-		await prisma.game.deleteMany({ where: { name: { in: gamesToDelete } } })
-		await prisma.game.createMany({
-			data: gamesToCreate.map((name) => ({ name }))
-		})
+		if (gamesToDelete.length > 0) {
+			await prisma.clip.deleteMany({ where: { gameName: { in: gamesToDelete } } })
+			await prisma.game.deleteMany({ where: { name: { in: gamesToDelete } } })
+		}
+
+		if (gamesToCreate.length > 0) {
+			await prisma.game.createMany({
+				data: gamesToCreate.map((name) => ({ name }))
+			})
+		}
 
 		return true
 	} catch (error) {
@@ -61,6 +67,13 @@ export async function readClipsFolderAndSave(gameName: string) {
 		)
 
 		await prisma.clip.deleteMany({ where: { filename: { in: clipsToDelete } } })
+
+		for (const delClip of clipsToDelete) {
+			const thumbPath = path.join(settings.gameFolder, 'thumbs', delClip + '.jpg')
+			if (fs.existsSync(thumbPath)) {
+				fs.unlinkSync(thumbPath)
+			}
+		}
 
 		const clipsParsedWithId = clips
 			.filter((clip) => clip.endsWith('.mp4'))
