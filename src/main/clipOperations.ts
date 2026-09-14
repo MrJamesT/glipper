@@ -15,6 +15,28 @@ if (ffmpegPath !== null) {
 	ffmpeg.setFfprobePath(ffprobePath.path.replace('app.asar', 'app.asar.unpacked'))
 }
 
+// the player may still hold the file for a moment after playback stops (mostly on Windows)
+async function unlinkWithRetry(filePath: string, attempts = 5, delayMs = 200) {
+	for (let attempt = 1; ; attempt++) {
+		try {
+			await fs.promises.unlink(filePath)
+			return
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code
+			const locked = code === 'EBUSY' || code === 'EPERM'
+			if (!locked || attempt >= attempts) throw error
+			await new Promise((resolve) => setTimeout(resolve, delayMs))
+		}
+	}
+}
+
+function deleteThumbnail(gameFolder: string, filename: string) {
+	const thumbPath = path.join(gameFolder, 'thumbs', filename + '.jpg')
+	if (fs.existsSync(thumbPath)) {
+		fs.unlinkSync(thumbPath)
+	}
+}
+
 interface ClipCutData {
 	startTime: number
 	endTime: number
@@ -56,12 +78,8 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 						})
 
 						if (reqData.removeOriginal) {
-							fs.unlinkSync(oldClipPath)
-
-							const thumbPath = path.join(settings.gameFolder, 'thumbs', clip.filename + '.jpg')
-							if (fs.existsSync(thumbPath)) {
-								fs.unlinkSync(thumbPath)
-							}
+							await unlinkWithRetry(oldClipPath)
+							deleteThumbnail(settings.gameFolder, clip.filename)
 							await prisma.clip.delete({ where: { id: clipId } })
 						}
 
@@ -118,12 +136,8 @@ export async function deleteClip(clipId: string) {
 		const clip = await prisma.clip.findUnique({ where: { id: clipId } })
 		if (!clip) return
 
-		fs.unlinkSync(path.join(settings.gameFolder, clip.gameName, clip.filename))
-
-		const thumbPath = path.join(settings.gameFolder, 'thumbs', clip.filename + '.jpg')
-		if (fs.existsSync(thumbPath)) {
-			fs.unlinkSync(thumbPath)
-		}
+		await unlinkWithRetry(path.join(settings.gameFolder, clip.gameName, clip.filename))
+		deleteThumbnail(settings.gameFolder, clip.filename)
 
 		await prisma.clip.delete({ where: { id: clipId } })
 		clipsList(clip.gameName)

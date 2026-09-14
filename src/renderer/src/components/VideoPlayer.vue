@@ -99,8 +99,31 @@ const getClipDetails = async () => {
 	clipSettings.value.customName = (data?.name || '').replace('.mp4', '')
 }
 
+// the OS keeps the file locked while the player holds it, so drop the source first
+const releaseVideoFile = () => {
+	if (!video.value) return
+	video.value.pause()
+	video.value.removeAttribute('src')
+	video.value.load()
+}
+
+const neighbourClipId = (fallbackToOtherSide: boolean) => {
+	const clips = mainStore.sortedClips
+	const clipIndex = clips.findIndex((c: Clip) => c.id === mainStore.selectedClipId)
+	if (clipIndex === -1) return null
+
+	const up = mainStore.settings?.clipSwitchDirection !== 'down'
+	const preferred = up ? clips[clipIndex - 1] : clips[clipIndex + 1]
+	const other = up ? clips[clipIndex + 1] : clips[clipIndex - 1]
+
+	if (preferred) return preferred.id
+	if (fallbackToOtherSide && other) return other.id
+	return null
+}
+
 const saveClip = async () => {
-	if (video.value) video.value.src = ''
+	releaseVideoFile()
+	const nextClipId = neighbourClipId(clipSettings.value.removeOriginal)
 
 	const clipCutResult = (await window.electron.ipcRenderer.invoke('cutClip', mainStore.selectedClipId, {
 		startTime: clipSettings.value.startTime,
@@ -112,23 +135,15 @@ const saveClip = async () => {
 
 	if (clipCutResult) {
 		toast.add({ severity: 'success', summary: 'Clip saved successfully!', life: 3000 })
-
-		const clips = mainStore.sortedClips
-		if (mainStore.settings?.clipSwitchDirection) {
-			const clipIndex = clips.findIndex((c: Clip) => c.id === mainStore.selectedClipId)
-			if (mainStore.settings.clipSwitchDirection === 'up') {
-				if (clipIndex > 0) mainStore.selectedClipId = clips[clipIndex - 1].id
-			} else {
-				if (clipIndex < clips.length - 1) mainStore.selectedClipId = clips[clipIndex + 1].id
-			}
-		}
+		if (nextClipId) mainStore.selectedClipId = nextClipId
 	} else {
 		toast.add({ severity: 'error', summary: 'Error saving clip!', life: 3000 })
 	}
 }
 
 const deleteClip = async () => {
-	if (video.value) video.value.src = ''
+	releaseVideoFile()
+	const nextClipId = neighbourClipId(true)
 
 	const clipDeleteResult = (await window.electron.ipcRenderer.invoke(
 		'deleteClip',
@@ -137,6 +152,8 @@ const deleteClip = async () => {
 
 	if (clipDeleteResult) {
 		toast.add({ severity: 'success', summary: 'Clip deleted successfully!', life: 3000 })
+		mainStore.selectedClipId = nextClipId ?? ''
+		if (!nextClipId) clipDetails.value.duration = 0
 	} else {
 		toast.add({ severity: 'error', summary: 'Error deleting clip!', life: 3000 })
 	}
