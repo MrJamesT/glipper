@@ -10,7 +10,7 @@ files:
   - "!prisma/dev.db"
   - "resources/**/*"
   - "!electron.vite.config.{js,ts,mjs,cjs}"
-  - "!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
+  - "!{eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
   - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
   - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
   - "node_modules/ffmpeg-static/ffmpeg"
@@ -19,14 +19,11 @@ files:
   - "node_modules/ffprobe-static/bin/${os}/${arch}/ffmpeg"
   - "node_modules/ffprobe-static/index.js"
   - "node_modules/ffprobe-static/package.json"
-extraResources:
-  - node_modules/.prisma/**/*
-  - node_modules/@prisma/engines/schema-engine*
-  - node_modules/@prisma/engines/query*
-  - node_modules/@prisma/engines/libquery*
+  - "!node_modules/@prisma/engines/schema-engine*"
 asarUnpack:
   - resources/**
   - prisma
+  - node_modules/@prisma/engines/**
 win:
   executableName: glipper
 nsis:
