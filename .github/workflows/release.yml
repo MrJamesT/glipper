@@ -5,12 +5,11 @@ on:
         tags:
             - v*.*.*
 
-# the built-in token needs this to create the release and upload files
 permissions:
     contents: write
 
 jobs:
-    build-and-release:
+    build:
         runs-on: ${{ matrix.os }}
 
         strategy:
@@ -44,27 +43,22 @@ jobs:
 
             - name: build-linux
               if: matrix.os == 'ubuntu-latest'
-              run: npm run build:linux
+              run: pnpm run build:linux
 
             - name: build-mac
               if: matrix.os == 'macos-latest'
-              run: npm run build:mac
+              run: pnpm run build:mac
 
             - name: build-win
               if: matrix.os == 'windows-latest'
-              run: npm run build:win
+              run: pnpm run build:win
 
-            - name: Get version from package.json
-              id: get_version
-              run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-            - name: Create GitHub release
-              uses: softprops/action-gh-release@v2
+            - name: Upload installers
+              uses: actions/upload-artifact@v4
               with:
-                  draft: true
-                  tag_name: 'v${{ steps.get_version.outputs.VERSION }}'
-                  name: 'Release v${{ steps.get_version.outputs.VERSION }}'
-                  files: |
+                  name: dist-${{ matrix.os }}
+                  if-no-files-found: error
+                  path: |
                       dist/*.exe
                       dist/*.zip
                       dist/*.dmg
@@ -73,7 +67,30 @@ jobs:
                       dist/*.deb
                       dist/*.rpm
                       dist/*.tar.gz
-                      dist/*.yml
+                      dist/latest*.yml
                       dist/*.blockmap
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # one job makes the release, so the three builds cannot race each other
+    release:
+        needs: build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Download installers
+              uses: actions/download-artifact@v4
+              with:
+                  pattern: dist-*
+                  merge-multiple: true
+                  path: dist
+
+            - name: List files
+              run: ls -la dist
+
+            - name: Create draft GitHub release
+              uses: softprops/action-gh-release@v2
+              with:
+                  draft: true
+                  tag_name: ${{ github.ref_name }}
+                  name: Release ${{ github.ref_name }}
+                  fail_on_unmatched_files: true
+                  files: dist/*
