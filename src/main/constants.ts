@@ -1,57 +1,31 @@
 import path from 'path'
+import fs from 'fs'
 import { app } from 'electron'
 
-export const dbPath = path.join(app.getPath('userData'), 'app.db')
-export const dbUrl = import.meta.env.DEV ? 'file:./dev.db' : 'file:' + dbPath
+const appPath = app.getAppPath()
+// files listed in asarUnpack live next to the asar, not inside it
+const unpackedAppPath = appPath.replace('app.asar', 'app.asar.unpacked')
+
+export const dbPath = import.meta.env.DEV
+	? path.join(appPath, 'prisma', 'dev.db')
+	: path.join(app.getPath('userData'), 'app.db')
+export const dbUrl = 'file:' + dbPath
+
+export const migrationsPath = path.join(unpackedAppPath, 'prisma', 'migrations')
 
 // Hacky, but putting this here because otherwise at query time the Prisma client
 // gives an error "Environment variable not found: DATABASE_URL" despite us passing
 // the dbUrl into the prisma client constructor in datasources.db.url
 process.env.DATABASE_URL = dbUrl
 
-// This needs to be updated every time you create a migration!
-export const latestMigration = '20240830202610_fixed_settings_id'
-export const platformToExecutables: Record<string, { migrationEngine: string; queryEngine: string }> = {
-	win32: {
-		migrationEngine: 'node_modules/@prisma/engines/schema-engine-windows.exe',
-		queryEngine: 'node_modules/@prisma/engines/query_engine-windows.dll.node'
-	},
-	linux: {
-		migrationEngine: 'node_modules/@prisma/engines/schema-engine-debian-openssl-1.1.x',
-		queryEngine: 'node_modules/@prisma/engines/libquery_engine-debian-openssl-1.1.x.so.node'
-	},
-	darwin: {
-		migrationEngine: 'node_modules/@prisma/engines/schema-engine-darwin',
-		queryEngine: 'node_modules/@prisma/engines/libquery_engine-darwin.dylib.node'
-	},
-	darwinArm64: {
-		migrationEngine: 'node_modules/@prisma/engines/schema-engine-darwin-arm64',
-		queryEngine: 'node_modules/@prisma/engines/libquery_engine-darwin-arm64.dylib.node'
-	}
-}
-const extraResourcesPath = app.getAppPath().replace('app.asar', '') // impacted by extraResources setting in electron-builder.yml
+// @prisma/engines downloads only the engine for the build machine, so the exact file name differs per OS
+const enginesPath = path.join(unpackedAppPath, 'node_modules', '@prisma', 'engines')
+const queryEngineFile = fs
+	.readdirSync(enginesPath)
+	.find((file) => file.endsWith('.node') && /^(lib)?query_engine/.test(file))
 
-function getPlatformName(): string {
-	const isDarwin = process.platform === 'darwin'
-	if (isDarwin && process.arch === 'arm64') {
-		return process.platform + 'Arm64'
-	}
-
-	return process.platform
+if (!queryEngineFile) {
+	throw new Error(`No Prisma query engine found in ${enginesPath}`)
 }
 
-const platformName = getPlatformName()
-
-export const mePath = path.join(extraResourcesPath, platformToExecutables[platformName].migrationEngine)
-export const qePath = path.join(extraResourcesPath, platformToExecutables[platformName].queryEngine)
-
-export interface Migration {
-	id: string
-	checksum: string
-	finished_at: string
-	migration_name: string
-	logs: string
-	rolled_back_at: string
-	started_at: string
-	applied_steps_count: string
-}
+export const qePath = path.join(enginesPath, queryEngineFile)

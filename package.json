@@ -42,7 +42,6 @@
 		"pinia": "^4.0.3",
 		"primeicons": "^7.0.0",
 		"primevue": "^4.5.4",
-		"prisma": "^6.19.3",
 		"tailwindcss-primeui": "^0.6.1"
 	},
 	"devDependencies": {
@@ -60,6 +59,7 @@
 		"eslint-plugin-vue": "^10.11.0",
 		"fs-extra": "^11.4.0",
 		"prettier": "^3.9.6",
+		"prisma": "^6.19.3",
 		"replace-in-file": "^9.0.0",
 		"tailwindcss": "^4.3.3",
 		"typescript": "^5.9.3",
