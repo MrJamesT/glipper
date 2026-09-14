@@ -44,8 +44,11 @@ dmg:
 linux:
   target:
     - AppImage
-    - snap
     - deb
+  desktop:
+    entry:
+      Name: Glipper
+      Comment: Cut your game clips
   maintainer: electronjs.org
   category: Utility
 appImage:
