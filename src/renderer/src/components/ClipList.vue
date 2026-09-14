@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { format } from 'date-fns'
 import { useMainStore } from '@renderer/stores/mainStore'
 
@@ -38,23 +38,30 @@ const mainStore = useMainStore()
 const loadingThumbs = ref(true)
 const refreshKey = ref(0)
 
+const stopListeners: (() => void)[] = []
+
 onMounted(() => {
 	if (!mainStore.selectedGame) return
 	window.electron.ipcRenderer.send('clipsList', mainStore.selectedGame.name)
 
-	window.electron.ipcRenderer.on('clipsList', () => {
-		window.electron.ipcRenderer.send(
-			'getThumbnails',
-			mainStore.clips.map((clip) => clip.id)
-		)
-	})
+	stopListeners.push(
+		window.electron.ipcRenderer.on('clipsList', () => {
+			window.electron.ipcRenderer.send(
+				'getThumbnails',
+				mainStore.clips.map((clip) => clip.id)
+			)
+		}),
+		window.electron.ipcRenderer.on('getThumbnails', (_, success) => {
+			if (success) {
+				loadingThumbs.value = false
+				refreshKey.value++
+			}
+		})
+	)
+})
 
-	window.electron.ipcRenderer.on('getThumbnails', (_, success) => {
-		if (success) {
-			loadingThumbs.value = false
-			refreshKey.value++
-		}
-	})
+onUnmounted(() => {
+	stopListeners.forEach((stop) => stop())
 })
 
 function getImagePath(filename: string) {

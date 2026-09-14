@@ -27,7 +27,7 @@
 				class="game-card rounded flex flex-col justify-between cursor-pointer"
 				:class="{ 'bg-gray-800': !game.poster }"
 				:style="backgroundImage(game.poster)"
-				@click="mainStore.selectedGame = game"
+				@click="mainStore.selectGame(game)"
 			>
 				<div class="flex flex-col justify-end items-start w-full h-full p-3">
 					<Badge
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { Game } from '../../../generated/client'
 import defaultImage from '../assets/default.jpg'
@@ -106,11 +106,17 @@ const sortedGames = computed(() => {
 	})
 })
 
+let stopGamesListener: (() => void) | undefined
+
 onMounted(() => {
 	window.electron.ipcRenderer.send('gamesList')
-	window.electron.ipcRenderer.on('gamesList', (_, res: Game[]) => {
+	stopGamesListener = window.electron.ipcRenderer.on('gamesList', (_, res: Game[]) => {
 		games.value = res
 	})
+})
+
+onUnmounted(() => {
+	stopGamesListener?.()
 })
 </script>
 

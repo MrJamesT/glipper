@@ -18,11 +18,18 @@ export const useMainStore = defineStore('main', () => {
 		settings.value = response
 	}
 
+	// a clip id from another visit must not survive, or the same clip cannot be re-selected
+	function selectGame(game: Game | null) {
+		selectedGame.value = game
+		selectedClipId.value = ''
+		clips.value = []
+	}
+
 	function startListeners() {
 		window.electron.ipcRenderer.on('clipsList', (_, res: Clip[]) => {
 			clips.value = res
 		})
 	}
 
-	return { selectedGame, selectedClipId, settings, clips, sortedClips, getSettings, startListeners }
+	return { selectedGame, selectedClipId, settings, clips, sortedClips, getSettings, selectGame, startListeners }
 })

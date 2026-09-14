@@ -10,7 +10,7 @@
 				label="Games List"
 				text
 				icon="pi pi-arrow-left"
-				@click="mainStore.selectedGame = null"
+				@click="mainStore.selectGame(null)"
 			/>
 		</div>
 
