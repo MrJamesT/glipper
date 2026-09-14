@@ -4,6 +4,7 @@ import path from 'path'
 import { fork } from 'child_process'
 // This needs to be kept as require for the generated client to work
 import type { PrismaClient as PrismaClientType } from '../generated/client'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require('../generated/client')
 
 log.info('DB URL', dbUrl)
@@ -32,7 +33,7 @@ export async function runPrismaCommand({ command, dbUrl }: { command: string[]; 
 	// As a workaround, we spawn migration script as a child process and wait for its completion.
 	// Please also refer to the following GitHub issue: https://github.com/prisma/prisma/issues/4703
 	try {
-		const exitCode = await new Promise((resolve, _) => {
+		const exitCode = await new Promise((resolve) => {
 			const prismaPath = path.resolve(__dirname, '..', '..', 'node_modules/prisma/build/index.js')
 			log.info('Prisma path', prismaPath)
 

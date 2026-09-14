@@ -6,3 +6,4 @@ out
 .env
 *.db
 src/generated
+.eslintcache

@@ -15,12 +15,16 @@ jobs:
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
 
             - name: Install Node.js
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: 22
+                  cache: pnpm
 
             - name: Install Python
               uses: actions/setup-python@v5
@@ -30,7 +34,6 @@ jobs:
             - name: Install Dependencies
               run: |
                   pip install setuptools
-                  npm install -g pnpm
                   pnpm install
                   pnpm run prisma:generate
 
@@ -48,10 +51,10 @@ jobs:
 
             - name: Get version from package.json
               id: get_version
-              run: echo "::set-output name=VERSION::$(node -p "require('./package.json').version")"
+              run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
             - name: Create GitHub release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v2
               with:
                   draft: true
                   tag_name: 'v${{ steps.get_version.outputs.VERSION }}'

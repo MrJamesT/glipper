@@ -11,7 +11,7 @@ process.env.DATABASE_URL = dbUrl
 
 // This needs to be updated every time you create a migration!
 export const latestMigration = '20240830202610_fixed_settings_id'
-export const platformToExecutables: any = {
+export const platformToExecutables: Record<string, { migrationEngine: string; queryEngine: string }> = {
 	win32: {
 		migrationEngine: 'node_modules/@prisma/engines/schema-engine-windows.exe',
 		queryEngine: 'node_modules/@prisma/engines/query_engine-windows.dll.node'

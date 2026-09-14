@@ -18,7 +18,7 @@ async function main() {
 
 	// Copy the generated prisma client to the dist folder
 	fs.copySync(path.join(__dirname, 'src', 'generated'), path.join(__dirname, 'out', 'generated'), {
-		filter: (src, dest) => {
+		filter: (src) => {
 			// Prevent duplicate copy of query engine. It will already be in extraResources in electron-builder.yml
 			if (src.match(/query_engine/) || src.match(/libquery_engine/) || src.match(/esm/)) {
 				return false
