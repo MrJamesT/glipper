@@ -57,7 +57,7 @@ const lastCheck = computed(() => {
 	else return formatDistanceToNow(new Date(mainStore.settings.lastGameDBUpdate), { addSuffix: true })
 })
 
-const appVersion = computed(() => `v${window.electron.process.env.npm_package_version} | BETA`)
+const appVersion = `v${__APP_VERSION__} | BETA`
 
 const handleRefreshClick = () => {
 	window.electron.ipcRenderer.invoke('buildGameDB')
