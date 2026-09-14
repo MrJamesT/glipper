@@ -6,7 +6,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 
 import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
+import Aura from '@primeuix/themes/aura'
 import ToastService from 'primevue/toastservice'
 
 const pinia = createPinia()
