@@ -21,6 +21,7 @@ export default defineConfig(
 	},
 	{
 		files: ['**/*.{ts,mts,tsx,vue}'],
+		languageOptions: { globals: { __APP_VERSION__: 'readonly' } },
 		rules: {
 			'vue/require-default-prop': 'off',
 			'vue/multi-word-component-names': 'off',

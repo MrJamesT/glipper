@@ -57,6 +57,11 @@ export async function cutClip(clipId: string, reqData: ClipCutData) {
 
 						if (reqData.removeOriginal) {
 							fs.unlinkSync(oldClipPath)
+
+							const thumbPath = path.join(settings.gameFolder, 'thumbs', clip.filename + '.jpg')
+							if (fs.existsSync(thumbPath)) {
+								fs.unlinkSync(thumbPath)
+							}
 							await prisma.clip.delete({ where: { id: clipId } })
 						}
 
@@ -114,6 +119,11 @@ export async function deleteClip(clipId: string) {
 		if (!clip) return
 
 		fs.unlinkSync(path.join(settings.gameFolder, clip.gameName, clip.filename))
+
+		const thumbPath = path.join(settings.gameFolder, 'thumbs', clip.filename + '.jpg')
+		if (fs.existsSync(thumbPath)) {
+			fs.unlinkSync(thumbPath)
+		}
 
 		await prisma.clip.delete({ where: { id: clipId } })
 		clipsList(clip.gameName)
