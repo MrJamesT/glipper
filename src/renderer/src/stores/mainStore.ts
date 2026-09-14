@@ -6,6 +6,7 @@ export const useMainStore = defineStore('main', () => {
 	const selectedGame = ref<Game | null>(null)
 	const selectedClipId = ref('')
 	const settings = ref<AppSettings | null>(null)
+	const settingsDialogOpen = ref(false)
 
 	const clips = ref<Clip[]>([])
 
@@ -31,5 +32,15 @@ export const useMainStore = defineStore('main', () => {
 		})
 	}
 
-	return { selectedGame, selectedClipId, settings, clips, sortedClips, getSettings, selectGame, startListeners }
+	return {
+		selectedGame,
+		selectedClipId,
+		settings,
+		settingsDialogOpen,
+		clips,
+		sortedClips,
+		getSettings,
+		selectGame,
+		startListeners
+	}
 })

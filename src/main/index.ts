@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -93,6 +93,14 @@ app.whenReady().then(async () => {
 	ipcMain.handle('cutClip', async (_, clipId, reqData) => await cutClip(clipId, reqData))
 	ipcMain.handle('deleteClip', async (_, clipId) => await deleteClip(clipId))
 	ipcMain.handle('clipsSinceLastUpdate', async () => await getCountOfClipsSinceLastUpdate())
+	ipcMain.handle('pickFolder', async (_, currentPath?: string) => {
+		const result = await dialog.showOpenDialog(mainWindow!, {
+			title: 'Choose your clips folder',
+			defaultPath: currentPath || undefined,
+			properties: ['openDirectory', 'createDirectory']
+		})
+		return result.canceled ? null : result.filePaths[0]
+	})
 
 	ipcMain.on('gamesList', async () => await gamesList())
 	ipcMain.on('clipsList', async (_, gameId) => await clipsList(gameId))

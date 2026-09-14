@@ -1,6 +1,6 @@
 {
 	"name": "glipper",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "An easy utility for game clip cutting.",
 	"main": "./out/main/index.js",
 	"author": "Jakub Tabacek",
@@ -28,6 +28,7 @@
 	"dependencies": {
 		"@electron-toolkit/preload": "^3.0.2",
 		"@electron-toolkit/utils": "^4.0.0",
+		"@fontsource-variable/inter": "^5.3.0",
 		"@primeuix/themes": "^2.0.3",
 		"@prisma/client": "6.19.3",
 		"@prisma/engines": "^6.19.3",
