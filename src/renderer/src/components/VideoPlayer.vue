@@ -28,7 +28,8 @@
 				placeholder="Custom clip name"
 				class="p-2"
 				style="min-width: 600px"
-				@focus="handleInputFocus"
+				@focus="removeListeners"
+				@blur="addListeners"
 			/>
 			<div class="flex items-center ml-4">
 				<Checkbox v-model="clipSettings.removeOriginal" input-id="removeOrig" binary />
@@ -183,11 +184,6 @@ const removeListeners = () => {
 
 const addListeners = () => {
 	document.addEventListener('keydown', handleKeyboard)
-}
-
-const handleInputFocus = (focus: boolean) => {
-	if (focus) removeListeners()
-	else addListeners()
 }
 
 onMounted(() => {
