@@ -41,10 +41,10 @@ import Button from 'primevue/button'
 import ProgressBar from 'primevue/progressbar'
 import SettingsDialog from '../components/SettingsDialog.vue'
 
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistance } from 'date-fns'
 import { useMainStore } from '../stores/mainStore'
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const mainStore = useMainStore()
 const clipsSinceLastCheck = ref(0)
@@ -52,9 +52,13 @@ const settingsDialog = ref(false)
 const progress = ref(0)
 const progressAction = ref('')
 
+// ticks so the relative time below re-renders while the app stays open
+const now = ref(new Date())
+let clock: ReturnType<typeof setInterval> | undefined
+
 const lastCheck = computed(() => {
 	if (!mainStore.settings?.lastGameDBUpdate) return null
-	else return formatDistanceToNow(new Date(mainStore.settings.lastGameDBUpdate), { addSuffix: true })
+	return formatDistance(new Date(mainStore.settings.lastGameDBUpdate), now.value, { addSuffix: true })
 })
 
 const appVersion = `v${__APP_VERSION__} | BETA`
@@ -64,6 +68,8 @@ const handleRefreshClick = () => {
 }
 
 onMounted(async () => {
+	clock = setInterval(() => (now.value = new Date()), 30_000)
+
 	window.electron.ipcRenderer.send('clipsSinceLastUpdate')
 	window.electron.ipcRenderer.on('clipsSinceLastUpdate', (_, res: number) => {
 		clipsSinceLastCheck.value = res
@@ -82,5 +88,9 @@ onMounted(async () => {
 			}, 2000)
 		}
 	})
+})
+
+onUnmounted(() => {
+	clearInterval(clock)
 })
 </script>
