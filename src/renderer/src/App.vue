@@ -1,8 +1,11 @@
 <template>
-	<div class="w-full h-dvh flex flex-col">
+	<div class="flex h-dvh w-full flex-col">
 		<Header />
-		<GameTiles v-if="mainStore.selectedGame === null" />
-		<GamePage v-else />
+		<main class="flex min-h-0 flex-1 flex-col">
+			<GameTiles v-if="mainStore.selectedGame === null" />
+			<GamePage v-else />
+		</main>
+		<SettingsDialog v-model="mainStore.settingsDialogOpen" />
 		<Toast position="bottom-right" />
 	</div>
 </template>
@@ -12,12 +15,13 @@ import { onMounted } from 'vue'
 import { differenceInHours } from 'date-fns'
 
 import GameTiles from './components/GameTiles.vue'
+import GamePage from './components/GamePage.vue'
 import Header from './components/Header.vue'
+import SettingsDialog from './components/SettingsDialog.vue'
+import Toast from 'primevue/toast'
 
 import { useMainStore } from './stores/mainStore'
-import GamePage from './components/GamePage.vue'
 import { AppSettings } from '../../generated/client'
-import Toast from 'primevue/toast'
 
 const mainStore = useMainStore()
 
@@ -25,18 +29,20 @@ onMounted(async () => {
 	await mainStore.getSettings()
 	mainStore.startListeners()
 
-	if (
-		!mainStore.settings?.lastGameDBUpdate ||
-		differenceInHours(new Date(), new Date(mainStore.settings.lastGameDBUpdate)) > 4
-	) {
-		if (!mainStore.settings?.gameFolder) return
-		console.log('Game DB is older than 4 hours, rebuilding...')
-		window.electron.ipcRenderer.invoke('buildGameDB')
-	}
-
-	// All ON handlers
 	window.electron.ipcRenderer.on('getSettings', (_, res: AppSettings) => {
 		mainStore.settings = res
 	})
+
+	if (!mainStore.settings?.gameFolder) {
+		mainStore.settingsDialogOpen = true
+		return
+	}
+
+	if (
+		!mainStore.settings.lastGameDBUpdate ||
+		differenceInHours(new Date(), new Date(mainStore.settings.lastGameDBUpdate)) > 4
+	) {
+		window.electron.ipcRenderer.invoke('buildGameDB')
+	}
 })
 </script>

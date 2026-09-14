@@ -1,73 +1,122 @@
 <template>
-	<div class="flex flex-col justify-start items-center w-full p-10 pt-0">
-		<video ref="video" controls class="h-full max-h-[80%] w-full"></video>
-
-		<div class="flex justify-center items-center p-4">
-			<Button
-				class="btn mx-2"
-				icon="pi pi-map-marker"
-				icon-pos="left"
-				label="Mark start point"
-				@click="markStartTime"
-			/>
-			<Button
-				class="btn mx-2"
-				icon="pi pi-map-marker"
-				icon-pos="left"
-				label="Mark end point"
-				@click="markEndTime"
-			/>
-			<Button class="btn mx-2" disabled icon="pi pi-video" icon-pos="left" label="Add to compilation" />
-			<Button class="btn mx-2" icon="pi pi-trash" icon-pos="left" label="Delete clip" @click="deleteClip" />
-			<Button class="btn mx-2" icon="pi pi-save" icon-pos="left" label="Save clip" @click="saveClip" />
-		</div>
-
-		<div class="flex justify-center items-center">
-			<InputText
-				v-model="clipSettings.customName"
-				placeholder="Custom clip name"
-				class="p-2"
-				style="min-width: 600px"
-				@focus="removeListeners"
-				@blur="addListeners"
-			/>
-			<div class="flex items-center ml-4">
-				<Checkbox v-model="clipSettings.removeOriginal" input-id="removeOrig" binary />
-				<label for="removeOrig" class="ml-2">Delete original clip</label>
+	<section class="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+		<div class="panel relative flex min-h-0 flex-1 items-center justify-center overflow-hidden !bg-black">
+			<video ref="video" controls class="h-full w-full" :class="{ invisible: !hasClip }"></video>
+			<div v-if="!hasClip" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-500">
+				<i class="pi pi-play-circle mb-3 text-5xl text-zinc-600" />
+				<p class="text-sm">Pick a clip on the left to start</p>
 			</div>
 		</div>
 
-		<div v-if="clipDetails.duration > 0" class="flex justify-center items-center p-2">
-			<Chip class="m-2" :label="'Start: ' + clipSettings.startTime + 's'" icon="pi pi-map-marker" />
-			<Chip class="m-2" :label="'End: ' + clipSettings.endTime + 's'" icon="pi pi-map-marker" />
-			<Chip class="m-2" :label="'Duration: ' + clipDetails.duration + 's'" icon="pi pi-clock" />
-			<Chip class="m-2" :label="'FPS: ' + clipDetails.fps" icon="pi pi-video" />
-			<Chip class="m-2" :label="'Resolution: ' + clipDetails.resolution" icon="pi pi-image" />
-			<Chip class="m-2" :label="'Size: ' + approximateFileSize" icon="pi pi-file" />
+		<div class="panel p-4 transition" :class="{ 'pointer-events-none opacity-40': !hasClip }">
+			<div class="flex items-center justify-between text-xs text-zinc-400">
+				<span class="font-semibold tracking-wide text-zinc-300 uppercase">Trim</span>
+				<span>
+					<span class="text-zinc-200">{{ formatSeconds(clipSettings.startTime) }}</span>
+					<span class="mx-1">→</span>
+					<span class="text-zinc-200">{{ formatSeconds(clipSettings.endTime) }}</span>
+					<span class="mx-2 text-zinc-600">·</span>
+					{{ (clipSettings.endTime - clipSettings.startTime).toFixed(1) }}s of
+					{{ clipDetails.duration.toFixed(1) }}s
+				</span>
+			</div>
+
+			<div class="mt-2 h-2 rounded-full bg-zinc-800">
+				<div
+					class="relative h-full rounded-full bg-primary-500 transition-all"
+					:style="{ marginLeft: rangePercent.start + '%', width: rangePercent.width + '%' }"
+				></div>
+			</div>
+
+			<div class="mt-4 flex flex-wrap items-center gap-2">
+				<Button
+					v-tooltip.top="'Shortcut: Q'"
+					label="Mark start"
+					icon="pi pi-step-backward"
+					severity="secondary"
+					outlined
+					size="small"
+					@click="markStartTime"
+				/>
+				<Button
+					v-tooltip.top="'Shortcut: W'"
+					label="Mark end"
+					icon="pi pi-step-forward"
+					severity="secondary"
+					outlined
+					size="small"
+					@click="markEndTime"
+				/>
+
+				<div class="ml-auto flex gap-2">
+					<Button
+						label="Delete clip"
+						icon="pi pi-trash"
+						severity="danger"
+						outlined
+						size="small"
+						@click="deleteClip"
+					/>
+					<Button
+						v-tooltip.top="'Shortcut: S'"
+						label="Save cut"
+						icon="pi pi-save"
+						size="small"
+						@click="saveClip"
+					/>
+				</div>
+			</div>
+
+			<div class="mt-4 flex flex-wrap items-center gap-4">
+				<InputGroup class="max-w-xl flex-1">
+					<InputText
+						v-model="clipSettings.customName"
+						placeholder="Clip name"
+						size="small"
+						@focus="removeListeners"
+						@blur="addListeners"
+					/>
+					<InputGroupAddon class="text-xs">.cut.mp4</InputGroupAddon>
+				</InputGroup>
+
+				<div class="flex items-center gap-2">
+					<Checkbox v-model="clipSettings.removeOriginal" input-id="removeOrig" binary />
+					<label for="removeOrig" class="text-sm text-zinc-300">Delete original</label>
+				</div>
+			</div>
+
+			<div v-if="clipDetails.duration > 0" class="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-zinc-400">
+				<span><i class="pi pi-video mr-1 text-[10px]" />{{ clipDetails.fps }} fps</span>
+				<span><i class="pi pi-image mr-1 text-[10px]" />{{ clipDetails.resolution }}</span>
+				<span><i class="pi pi-file mr-1 text-[10px]" />{{ formatSize(+clipDetails.size) }} source</span>
+				<span><i class="pi pi-save mr-1 text-[10px]" />~{{ approximateFileSize }} after cut</span>
+			</div>
 		</div>
-	</div>
+	</section>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import InputGroup from 'primevue/inputgroup'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 import Checkbox from 'primevue/checkbox'
-import Chip from 'primevue/chip'
 
 import { useMainStore } from '../stores/mainStore'
 import { Clip } from '../../../generated/client'
+import { formatSeconds, formatSize, toFileUrl } from '../utils/format'
+
 const mainStore = useMainStore()
 const toast = useToast()
 
 const video = ref<HTMLVideoElement>()
 
 const clipSettings = ref({
-	startTime: 50,
-	endTime: 60,
-	compilation: false,
+	startTime: 0,
+	endTime: 0,
 	removeOriginal: true,
 	customName: ''
 })
@@ -80,23 +129,33 @@ const clipDetails = ref({
 	size: ''
 })
 
+const hasClip = computed(() => mainStore.selectedClipId.length > 0)
+
+const rangePercent = computed(() => {
+	const total = clipDetails.value.duration || 1
+	const start = Math.min(100, Math.max(0, (clipSettings.value.startTime / total) * 100))
+	const end = Math.min(100, Math.max(start, (clipSettings.value.endTime / total) * 100))
+	return { start, width: end - start }
+})
+
 const approximateFileSize = computed(() => {
 	const duration = clipSettings.value.endTime - clipSettings.value.startTime
-	return '~' + ((+clipDetails.value.size / clipDetails.value.duration) * duration).toFixed(2) + ' MB'
+	if (!clipDetails.value.duration) return formatSize(0)
+	return formatSize((+clipDetails.value.size / clipDetails.value.duration) * duration)
 })
 
 const getClipDetails = async () => {
 	const data = await window.electron.ipcRenderer.invoke('getClipDetails', mainStore.selectedClipId)
+	if (!data) return
 	clipDetails.value.name = data.name
 	clipDetails.value.duration = +(+data.duration).toFixed(2)
 	clipDetails.value.fps = +data.fps
 	clipDetails.value.resolution = data.resolution
-	clipSettings.value.startTime = +(
-		+clipDetails.value.duration - 10 < 0 ? 0 : +clipDetails.value.duration - 10
-	).toFixed(2)
-	clipSettings.value.endTime = +(+clipDetails.value.duration).toFixed(2)
 	clipDetails.value.size = data.size
-	clipSettings.value.customName = (data?.name || '').replace('.mp4', '')
+	// default to the last 10 seconds, the usual "that was cool" moment
+	clipSettings.value.startTime = +Math.max(0, clipDetails.value.duration - 10).toFixed(2)
+	clipSettings.value.endTime = clipDetails.value.duration
+	clipSettings.value.customName = (data.name || '').replace('.mp4', '')
 }
 
 // the OS keeps the file locked while the player holds it, so drop the source first
@@ -122,6 +181,7 @@ const neighbourClipId = (fallbackToOtherSide: boolean) => {
 }
 
 const saveClip = async () => {
+	if (!hasClip.value) return
 	releaseVideoFile()
 	const nextClipId = neighbourClipId(clipSettings.value.removeOriginal)
 
@@ -134,14 +194,15 @@ const saveClip = async () => {
 	})) as boolean
 
 	if (clipCutResult) {
-		toast.add({ severity: 'success', summary: 'Clip saved successfully!', life: 3000 })
+		toast.add({ severity: 'success', summary: 'Clip saved', life: 3000 })
 		if (nextClipId) mainStore.selectedClipId = nextClipId
 	} else {
-		toast.add({ severity: 'error', summary: 'Error saving clip!', life: 3000 })
+		toast.add({ severity: 'error', summary: 'Could not save the clip', life: 3000 })
 	}
 }
 
 const deleteClip = async () => {
+	if (!hasClip.value) return
 	releaseVideoFile()
 	const nextClipId = neighbourClipId(true)
 
@@ -151,11 +212,11 @@ const deleteClip = async () => {
 	)) as boolean
 
 	if (clipDeleteResult) {
-		toast.add({ severity: 'success', summary: 'Clip deleted successfully!', life: 3000 })
+		toast.add({ severity: 'success', summary: 'Clip deleted', life: 3000 })
 		mainStore.selectedClipId = nextClipId ?? ''
 		if (!nextClipId) clipDetails.value.duration = 0
 	} else {
-		toast.add({ severity: 'error', summary: 'Error deleting clip!', life: 3000 })
+		toast.add({ severity: 'error', summary: 'Could not delete the clip', life: 3000 })
 	}
 }
 
@@ -164,7 +225,11 @@ watch(
 	async () => {
 		if (mainStore.selectedGame && mainStore.selectedClipId.length > 0 && video.value) {
 			await getClipDetails()
-			video.value.src = `${mainStore.settings!.gameFolder}/${mainStore.selectedGame.name}/${clipDetails.value.name}`
+			video.value.src = toFileUrl(
+				mainStore.settings!.gameFolder,
+				mainStore.selectedGame.name,
+				clipDetails.value.name
+			)
 			video.value.currentTime = clipSettings.value.startTime
 			video.value.volume = 0.1
 			video.value.play()
@@ -173,26 +238,23 @@ watch(
 )
 
 const markStartTime = () => {
-	if (!video.value) return
+	if (!video.value || !hasClip.value) return
 	clipSettings.value.startTime = +video.value.currentTime.toFixed(2)
+	if (clipSettings.value.endTime < clipSettings.value.startTime) {
+		clipSettings.value.endTime = clipDetails.value.duration
+	}
 }
 
 const markEndTime = () => {
-	if (!video.value) return
+	if (!video.value || !hasClip.value) return
 	clipSettings.value.endTime = +video.value.currentTime.toFixed(2)
 }
 
-// Handle all keyboard events along with removing them when user is typing in the input field
+// Keyboard shortcuts, paused while the name input has focus
 const handleKeyboard = (e: KeyboardEvent) => {
-	if (e.key === 'q') {
-		markStartTime()
-	} else if (e.key === 'w') {
-		markEndTime()
-	} else if (e.key === 'c') {
-		console.warn('not implemented')
-	} else if (e.key === 's') {
-		saveClip()
-	}
+	if (e.key === 'q') markStartTime()
+	else if (e.key === 'w') markEndTime()
+	else if (e.key === 's') saveClip()
 }
 
 const removeListeners = () => {
@@ -206,6 +268,8 @@ const addListeners = () => {
 onMounted(() => {
 	addListeners()
 })
-</script>
 
-<style scoped></style>
+onUnmounted(() => {
+	removeListeners()
+})
+</script>

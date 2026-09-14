@@ -1,53 +1,69 @@
 <template>
-	<!-- Game Poster and info -->
-	<div v-if="mainStore.selectedGame" class="flex">
-		<img :src="mainStore.selectedGame.poster || defaultImage" class="rounded-lg m-4 h-40" alt="Game Poster" />
-		<div class="flex flex-col justify-center ml-4">
-			<div class="font-bold text-4xl">
-				{{ mainStore.selectedGame.name }}
+	<div v-if="mainStore.selectedGame" class="flex min-h-0 flex-1 flex-col">
+		<section class="relative isolate overflow-hidden px-8 pt-6 pb-6">
+			<div class="pointer-events-none absolute inset-0 -z-10">
+				<img :src="poster" alt="" class="h-full w-full scale-110 object-cover opacity-30 blur-3xl" />
+				<div class="absolute inset-0 bg-linear-to-b from-zinc-950/10 via-zinc-950/60 to-zinc-950" />
 			</div>
-			<div class="text-gray-400 text-lg">
-				Last clip
-				{{
-					formatDistanceToNowStrict(new Date(mainStore.selectedGame.lastClipDate || ''), {
-						addSuffix: true
-					})
-				}}
-			</div>
-			<div class="mt-2">
-				<Badge
-					:value="
-						mainStore.selectedGame.nOfClips + (mainStore.selectedGame.nOfClips > 1 ? ' clips' : ' clip')
-					"
-					severity="primary"
-				></Badge>
-				<Badge :value="gameSizeMBOrGB(mainStore.selectedGame.size)" class="mx-2" severity="info"></Badge>
-			</div>
-		</div>
-	</div>
 
-	<!-- Clip list and video player -->
-	<div class="flex h-full grow overflow-y-auto">
-		<ClipList />
-		<VideoPlayer />
+			<div class="flex items-end gap-6">
+				<img
+					:src="poster"
+					alt="Game poster"
+					class="h-44 w-[7.5rem] shrink-0 rounded-xl object-cover shadow-2xl ring-1 ring-white/10"
+				/>
+				<div class="min-w-0 pb-1">
+					<div class="text-xs font-semibold tracking-[0.2em] text-primary-400 uppercase">Game</div>
+					<h1 class="mt-1 truncate text-4xl font-bold tracking-tight">{{ mainStore.selectedGame.name }}</h1>
+					<div class="mt-4 flex flex-wrap items-center gap-2">
+						<span class="stat"
+							><i class="pi pi-video" /> {{ pluralClips(mainStore.selectedGame.nOfClips) }}</span
+						>
+						<span class="stat"
+							><i class="pi pi-database" /> {{ formatSize(mainStore.selectedGame.size) }}</span
+						>
+						<span class="stat">
+							<i class="pi pi-clock" />
+							Last clip
+							{{
+								formatDistanceToNowStrict(new Date(mainStore.selectedGame.lastClipDate || ''), {
+									addSuffix: true
+								})
+							}}
+						</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<div class="flex min-h-0 flex-1 gap-4 px-8 pb-6">
+			<ClipList />
+			<VideoPlayer />
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import ClipList from './ClipList.vue'
 import VideoPlayer from './VideoPlayer.vue'
 import defaultImage from '../assets/default.jpg'
+import { formatSize, pluralClips } from '../utils/format'
 
 import { useMainStore } from '@renderer/stores/mainStore'
 import { formatDistanceToNowStrict } from 'date-fns'
-import Badge from 'primevue/badge'
 
 const mainStore = useMainStore()
-
-const gameSizeMBOrGB = (size: number) => {
-	if (size < 1024) return `${size}MB`
-	return `${(size / 1024).toFixed(2)}GB`
-}
+const poster = computed(() => mainStore.selectedGame?.poster || defaultImage)
 </script>
 
-<style scoped></style>
+<style scoped>
+@reference '../assets/main.css';
+
+.stat {
+	@apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-zinc-200;
+}
+.stat .pi {
+	@apply text-xs text-zinc-400;
+}
+</style>
